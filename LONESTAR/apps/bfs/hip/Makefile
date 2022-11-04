@@ -1,13 +1,14 @@
 HIPOPTS = --amdgpu-target=gfx906,gfx900
 
-HIP_PATH ?= /opt/rocm/hip
+ROCM_PATH ?= /opt/rocm
+HIP_PATH ?= $(ROCM_PATH)/hip
 
 CC := $(HIP_PATH)/bin/hipcc
 
-INCLUDE := 
-LIB := 
+INCLUDE := $(ROCM_PATH)/include -Iinclude
+LIB := $(ROCM_PATH)/lib -lhiprand -lrocrand
 
-SRC = main.hip.cc
+SRC = skel.hip.cc
 
 EXE_GSRB = scan_gsrb
 EXE_GCPUSRB = scan_gcpusrb

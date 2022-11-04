@@ -1,4 +1,6 @@
 /* -*- mode: C++ -*- */
+#ifndef SUPPORT_H_
+#define SUPPORT_H_
 
 #include "gg.h"
 
@@ -44,3 +46,5 @@ void output(CSRGraphTy &g, const char *output_file) {
     }    
   }
 }
+
+#endif // SUPPORT_H_
