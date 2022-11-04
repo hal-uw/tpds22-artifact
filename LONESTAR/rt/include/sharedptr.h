@@ -13,7 +13,7 @@
 #pragma once
 #include <cstdlib>
 #include <cstdio>
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include <assert.h>
 #include "cutil_subset.h"
 
@@ -80,7 +80,7 @@ public:
       ::free(ptrs[device]);
     else
       {
-	if(cudaFree(ptrs[device]) == cudaSuccess)
+	if(hipFree(ptrs[device]) == hipSuccess)
 	  ptrs[device] = NULL;
 	else
 	  return false;
@@ -147,7 +147,7 @@ public:
     assert(device >= 1);
 
     if(ptrs[device] == NULL)
-      CUDA_SAFE_CALL(cudaMalloc(&ptrs[device], nmemb * sizeof(T)));
+      CUDA_SAFE_CALL(hipMalloc(&ptrs[device], nmemb * sizeof(T)));
 
     if(!owner[device])
       {
@@ -166,7 +166,7 @@ public:
     assert(device >= 1);
 
     if(ptrs[device] == NULL) {
-      CUDA_SAFE_CALL(cudaMalloc(&ptrs[device], nmemb * sizeof(T)));
+      CUDA_SAFE_CALL(hipMalloc(&ptrs[device], nmemb * sizeof(T)));
     }
 
     if(!owner[device])
@@ -190,7 +190,7 @@ public:
 
   T *zero_gpu(int device = 1) { 
     T *p = gpu_wr_ptr(true, device);
-    CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(T) * nmemb));
+    CUDA_SAFE_CALL(hipMemset(p, 0, sizeof(T) * nmemb));
     return p;
   }
 
@@ -202,11 +202,11 @@ public:
     assert(ptrs[dst]);
 
     if(isCPU[dst] && !isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), cudaMemcpyDeviceToHost));
+      CUDA_SAFE_CALL(hipMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), hipMemcpyDeviceToHost));
     } else if (!isCPU[dst] && !isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), cudaMemcpyDeviceToDevice)); 
+      CUDA_SAFE_CALL(hipMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), hipMemcpyDeviceToDevice)); 
     } else if (!isCPU[dst] && isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), cudaMemcpyHostToDevice)); 
+      CUDA_SAFE_CALL(hipMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T), hipMemcpyHostToDevice)); 
     } else
       abort(); // cpu-to-cpu not implemented
   

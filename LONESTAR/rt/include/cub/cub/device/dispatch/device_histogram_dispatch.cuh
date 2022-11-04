@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
@@ -29,7 +30,7 @@
 
 /**
  * \file
- * cub::DeviceHistogram provides device-wide parallel operations for constructing histogram(s) from a sequence of samples data residing within global memory.
+ * hipcub::DeviceHistogram provides device-wide parallel operations for constructing histogram(s) from a sequence of samples data residing within global memory.
  */
 
 #pragma once
@@ -323,36 +324,36 @@ struct DeviceHistogramDispatch
      * Internal dispatch routine
      */
     template <
-        typename                    InitHistoKernelPtr,                 ///< Function type of cub::HistoInitKernel
-        typename                    HistoRegionKernelPtr,               ///< Function type of cub::HistoRegionKernel
-        typename                    AggregateHistoKernelPtr>            ///< Function type of cub::HistoAggregateKernel
+        typename                    InitHistoKernelPtr,                 ///< Function type of hipcub::HistoInitKernel
+        typename                    HistoRegionKernelPtr,               ///< Function type of hipcub::HistoRegionKernel
+        typename                    AggregateHistoKernelPtr>            ///< Function type of hipcub::HistoAggregateKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_samples,                          ///< [in] Input samples to histogram
         HistoCounter                *d_histograms[ACTIVE_CHANNELS],     ///< [out] Array of channel histograms, each having BINS counters of integral type \p HistoCounter.
         Offset                      num_samples,                        ///< [in] Number of samples to process
-        cudaStream_t                stream,                             ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream,                             ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous,                  ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Default is \p false.
-        InitHistoKernelPtr          init_kernel,                        ///< [in] Kernel function pointer to parameterization of cub::HistoInitKernel
-        HistoRegionKernelPtr        histo_range_kernel,                ///< [in] Kernel function pointer to parameterization of cub::HistoRegionKernel
-        AggregateHistoKernelPtr     aggregate_kernel,                   ///< [in] Kernel function pointer to parameterization of cub::HistoAggregateKernel
+        InitHistoKernelPtr          init_kernel,                        ///< [in] Kernel function pointer to parameterization of hipcub::HistoInitKernel
+        HistoRegionKernelPtr        histo_range_kernel,                ///< [in] Kernel function pointer to parameterization of hipcub::HistoRegionKernel
+        AggregateHistoKernelPtr     aggregate_kernel,                   ///< [in] Kernel function pointer to parameterization of hipcub::HistoAggregateKernel
         KernelConfig                histo_range_config)                ///< [in] Dispatch parameters that match the policy that \p histo_range_kernel was compiled for
     {
     #ifndef CUB_RUNTIME_ENABLED
 
         // Kernel launch not supported from this device
-        return CubDebug(cudaErrorNotSupported);
+        return CubDebug(hipErrorNotSupported);
 
     #else
 
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get device ordinal
             int device_ordinal;
-            if (CubDebug(error = cudaGetDevice(&device_ordinal))) break;
+            if (CubDebug(error = hipGetDevice(&device_ordinal))) break;
 
             // Get device SM version
             int sm_version;
@@ -360,7 +361,7 @@ struct DeviceHistogramDispatch
 
             // Get SM count
             int sm_count;
-            if (CubDebug(error = cudaDeviceGetAttribute (&sm_count, cudaDevAttrMultiProcessorCount, device_ordinal))) break;
+            if (CubDebug(error = hipDeviceGetAttribute (&sm_count, hipDeviceAttributeMultiprocessorCount, device_ordinal))) break;
 
             // Get SM occupancy for histo_range_kernel
             int histo_range_sm_occupancy;
@@ -417,7 +418,7 @@ struct DeviceHistogramDispatch
             if (d_temp_storage == NULL)
             {
                 // Return if the caller is simply requesting the size of the storage allocation
-                return cudaSuccess;
+                return hipSuccess;
             }
 
             // Alias the allocation for the privatized per-block reductions
@@ -437,13 +438,13 @@ struct DeviceHistogramDispatch
                 d_temp_histo_wrapper.array[CHANNEL] = d_block_histograms + (CHANNEL * histo_range_grid_size * BINS);
 
             // Log init_kernel configuration
-            if (debug_synchronous) CubLog("Invoking init_kernel<<<%d, %d, 0, %lld>>>()\n", ACTIVE_CHANNELS, BINS, (long long) stream);
+            if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(init_kernel, dim3(%d), dim3(%d), 0, %lld)\n", ACTIVE_CHANNELS, BINS, (long long) stream);
 
             // Invoke init_kernel to initialize counters and queue descriptor
-            init_kernel<<<ACTIVE_CHANNELS, BINS, 0, stream>>>(queue, d_histo_wrapper, num_samples);
+            hipLaunchKernelGGL(init_kernel, dim3(ACTIVE_CHANNELS), dim3(BINS), 0, stream, queue, d_histo_wrapper, num_samples);
 
             // Check for failure to launch
-            if (CubDebug(error = cudaPeekAtLastError())) break;
+            if (CubDebug(error = hipPeekAtLastError())) break;
 
             // Sync the stream if specified to flush runtime errors
             if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -452,11 +453,11 @@ struct DeviceHistogramDispatch
             bool privatized_temporaries = (histo_range_grid_size > 1) && (histo_range_config.block_algorithm != DEVICE_HISTO_GLOBAL_ATOMIC);
 
             // Log histo_range_kernel configuration
-            if (debug_synchronous) CubLog("Invoking histo_range_kernel<<<%d, %d, 0, %lld>>>(), %d items per thread, %d SM occupancy\n",
+            if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(histo_range_kernel, dim3(%d), dim3(%d), 0, %lld), %d items per thread, %d SM occupancy\n",
                 histo_range_grid_size, histo_range_config.block_threads, (long long) stream, histo_range_config.items_per_thread, histo_range_sm_occupancy);
 
             // Invoke histo_range_kernel
-            histo_range_kernel<<<histo_range_grid_size, histo_range_config.block_threads, 0, stream>>>(
+            hipLaunchKernelGGL(histo_range_kernel, dim3(histo_range_grid_size), dim3(histo_range_config.block_threads), 0, stream, 
                 d_samples,
                 (privatized_temporaries) ?
                     d_temp_histo_wrapper :
@@ -466,7 +467,7 @@ struct DeviceHistogramDispatch
                 queue);
 
             // Check for failure to launch
-            if (CubDebug(error = cudaPeekAtLastError())) break;
+            if (CubDebug(error = hipPeekAtLastError())) break;
 
             // Sync the stream if specified to flush runtime errors
             if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -475,17 +476,17 @@ struct DeviceHistogramDispatch
             if (privatized_temporaries)
             {
                 // Log aggregate_kernel configuration
-                if (debug_synchronous) CubLog("Invoking aggregate_kernel<<<%d, %d, 0, %lld>>>()\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(aggregate_kernel, dim3(%d), dim3(%d), 0, %lld)\n",
                     ACTIVE_CHANNELS, BINS, (long long) stream);
 
                 // Invoke aggregate_kernel
-                aggregate_kernel<<<ACTIVE_CHANNELS, BINS, 0, stream>>>(
+                hipLaunchKernelGGL(aggregate_kernel, dim3(ACTIVE_CHANNELS), dim3(BINS), 0, stream, 
                     d_block_histograms,
                     d_histo_wrapper,
                     histo_range_grid_size);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -503,16 +504,16 @@ struct DeviceHistogramDispatch
      * Internal dispatch routine
      */
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t              &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator       d_samples,                          ///< [in] Input samples to histogram
         HistoCounter        *d_histograms[ACTIVE_CHANNELS],     ///< [out] Array of channel histograms, each having BINS counters of integral type \p HistoCounter.
         int                 num_samples,                        ///< [in] Number of samples to process
-        cudaStream_t        stream,                             ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t        stream,                             ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                debug_synchronous)                  ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get PTX version

@@ -9,7 +9,8 @@
 #include "mgpucontext.h"
 #include "mgpuutil.h"
 #include <hipcub/hipcub.hpp>
-//#include "cub/util_allocator.cuh"
+#include "cub/util_allocator.cuh"
+//#include <hipcub/util_allocator.hpp>
 #include "thread_work.h"
 
 __device__ __forceinline__ bool ld_gbl_cg (const bool *addr)

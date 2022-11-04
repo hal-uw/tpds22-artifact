@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * cub::GridQueue is a descriptor utility for dynamic queue management.
+ * hipcub::GridQueue is a descriptor utility for dynamic queue management.
  */
 
 #pragma once
@@ -119,29 +120,29 @@ public:
 
 
     /// This operation sets the fill-size and resets the drain counter, preparing the GridQueue for draining in the next kernel instance.  To be called by the host or by a kernel prior to that which will be draining.
-    __host__ __device__ __forceinline__ cudaError_t FillAndResetDrain(
+    __host__ __device__ __forceinline__ hipError_t FillAndResetDrain(
         Offset fill_size,
-        cudaStream_t stream = 0)
+        hipStream_t stream = 0)
     {
 #if (CUB_PTX_ARCH > 0)
         d_counters[FILL] = fill_size;
         d_counters[DRAIN] = 0;
-        return cudaSuccess;
+        return hipSuccess;
 #else
         Offset counters[2];
         counters[FILL] = fill_size;
         counters[DRAIN] = 0;
-        return CubDebug(cudaMemcpyAsync(d_counters, counters, sizeof(Offset) * 2, cudaMemcpyHostToDevice, stream));
+        return CubDebug(hipMemcpyAsync(d_counters, counters, sizeof(Offset) * 2, hipMemcpyHostToDevice, stream));
 #endif
     }
 
 
     /// This operation resets the drain so that it may advance to meet the existing fill-size.  To be called by the host or by a kernel prior to that which will be draining.
-    __host__ __device__ __forceinline__ cudaError_t ResetDrain(cudaStream_t stream = 0)
+    __host__ __device__ __forceinline__ hipError_t ResetDrain(hipStream_t stream = 0)
     {
 #if (CUB_PTX_ARCH > 0)
         d_counters[DRAIN] = 0;
-        return cudaSuccess;
+        return hipSuccess;
 #else
         return FillAndResetDrain(0, stream);
 #endif
@@ -149,27 +150,27 @@ public:
 
 
     /// This operation resets the fill counter.  To be called by the host or by a kernel prior to that which will be filling.
-    __host__ __device__ __forceinline__ cudaError_t ResetFill()
+    __host__ __device__ __forceinline__ hipError_t ResetFill()
     {
 #if (CUB_PTX_ARCH > 0)
         d_counters[FILL] = 0;
-        return cudaSuccess;
+        return hipSuccess;
 #else
-        return CubDebug(cudaMemset(d_counters + FILL, 0, sizeof(Offset)));
+        return CubDebug(hipMemset(d_counters + FILL, 0, sizeof(Offset)));
 #endif
     }
 
 
     /// Returns the fill-size established by the parent or by the previous kernel.
-    __host__ __device__ __forceinline__ cudaError_t FillSize(
+    __host__ __device__ __forceinline__ hipError_t FillSize(
         Offset &fill_size,
-        cudaStream_t stream = 0)
+        hipStream_t stream = 0)
     {
 #if (CUB_PTX_ARCH > 0)
         fill_size = d_counters[FILL];
-        return cudaSuccess;
+        return hipSuccess;
 #else
-        return CubDebug(cudaMemcpyAsync(&fill_size, d_counters + FILL, sizeof(Offset), cudaMemcpyDeviceToHost, stream));
+        return CubDebug(hipMemcpyAsync(&fill_size, d_counters + FILL, sizeof(Offset), hipMemcpyDeviceToHost, stream));
 #endif
     }
 

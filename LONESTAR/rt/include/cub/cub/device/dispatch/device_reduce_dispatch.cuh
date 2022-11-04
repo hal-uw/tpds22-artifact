@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
@@ -29,7 +30,7 @@
 
 /**
  * \file
- * cub::DeviceReduce provides device-wide, parallel operations for computing a reduction across a sequence of data items residing within global memory.
+ * hipcub::DeviceReduce provides device-wide, parallel operations for computing a reduction across a sequence of data items residing within global memory.
  */
 
 #pragma once
@@ -74,7 +75,7 @@ __global__ void ReduceRegionKernel(
     Offset                  num_items,                  ///< [in] Total number of input data items
     GridEvenShare<Offset>   even_share,                 ///< [in] Even-share descriptor for mapping an equal number of tiles onto each thread block
     GridQueue<Offset>       queue,                      ///< [in] Drain queue descriptor for dynamically mapping tile data onto thread blocks
-    ReductionOp             reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+    ReductionOp             reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
 {
     // Data type
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -118,7 +119,7 @@ __global__ void SingleTileKernel(
     InputIterator           d_in,                       ///< [in] Pointer to the input sequence of data items
     OutputIterator          d_out,                      ///< [out] Pointer to the output aggregate
     Offset                  num_items,                  ///< [in] Total number of input data items
-    ReductionOp             reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+    ReductionOp             reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
 {
     // Data type
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -482,39 +483,39 @@ struct DeviceReduceDispatch
      * kernel invocations.
      */
     template <
-        typename                    ReduceRegionKernelPtr,              ///< Function type of cub::ReduceRegionKernel
-        typename                    AggregateTileKernelPtr,             ///< Function type of cub::SingleTileKernel for consuming partial reductions (T*)
-        typename                    SingleTileKernelPtr,                ///< Function type of cub::SingleTileKernel for consuming input (InputIterator)
-        typename                    FillAndResetDrainKernelPtr>         ///< Function type of cub::FillAndResetDrainKernel
+        typename                    ReduceRegionKernelPtr,              ///< Function type of hipcub::ReduceRegionKernel
+        typename                    AggregateTileKernelPtr,             ///< Function type of hipcub::SingleTileKernel for consuming partial reductions (T*)
+        typename                    SingleTileKernelPtr,                ///< Function type of hipcub::SingleTileKernel for consuming input (InputIterator)
+        typename                    FillAndResetDrainKernelPtr>         ///< Function type of hipcub::FillAndResetDrainKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         Offset                      num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
-        cudaStream_t                stream,                             ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
+        hipStream_t                stream,                             ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous,                  ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
-        FillAndResetDrainKernelPtr  prepare_drain_kernel,               ///< [in] Kernel function pointer to parameterization of cub::FillAndResetDrainKernel
-        ReduceRegionKernelPtr       reduce_range_kernel,               ///< [in] Kernel function pointer to parameterization of cub::ReduceRegionKernel
-        AggregateTileKernelPtr      aggregate_kernel,                   ///< [in] Kernel function pointer to parameterization of cub::SingleTileKernel for consuming partial reductions (T*)
-        SingleTileKernelPtr         single_kernel,                      ///< [in] Kernel function pointer to parameterization of cub::SingleTileKernel for consuming input (InputIterator)
+        FillAndResetDrainKernelPtr  prepare_drain_kernel,               ///< [in] Kernel function pointer to parameterization of hipcub::FillAndResetDrainKernel
+        ReduceRegionKernelPtr       reduce_range_kernel,               ///< [in] Kernel function pointer to parameterization of hipcub::ReduceRegionKernel
+        AggregateTileKernelPtr      aggregate_kernel,                   ///< [in] Kernel function pointer to parameterization of hipcub::SingleTileKernel for consuming partial reductions (T*)
+        SingleTileKernelPtr         single_kernel,                      ///< [in] Kernel function pointer to parameterization of hipcub::SingleTileKernel for consuming input (InputIterator)
         KernelConfig                &reduce_range_config,              ///< [in] Dispatch parameters that match the policy that \p reduce_range_kernel_ptr was compiled for
         KernelConfig                &single_tile_config)                ///< [in] Dispatch parameters that match the policy that \p single_kernel was compiled for
     {
 #ifndef CUB_RUNTIME_ENABLED
 
         // Kernel launch not supported from this device
-        return CubDebug(cudaErrorNotSupported );
+        return CubDebug(hipErrorNotSupported );
 
 #else
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get device ordinal
             int device_ordinal;
-            if (CubDebug(error = cudaGetDevice(&device_ordinal))) break;
+            if (CubDebug(error = hipGetDevice(&device_ordinal))) break;
 
             // Get device SM version
             int sm_version;
@@ -522,7 +523,7 @@ struct DeviceReduceDispatch
 
             // Get SM count
             int sm_count;
-            if (CubDebug(error = cudaDeviceGetAttribute (&sm_count, cudaDevAttrMultiProcessorCount, device_ordinal))) break;
+            if (CubDebug(error = hipDeviceGetAttribute (&sm_count, hipDeviceAttributeMultiprocessorCount, device_ordinal))) break;
 
             // Tile size of reduce_range_kernel
             int tile_size = reduce_range_config.block_threads * reduce_range_config.items_per_thread;
@@ -535,22 +536,22 @@ struct DeviceReduceDispatch
                 if (d_temp_storage == NULL)
                 {
                     temp_storage_bytes = 1;
-                    return cudaSuccess;
+                    return hipSuccess;
                 }
 
                 // Log single_kernel configuration
-                if (debug_synchronous) CubLog("Invoking ReduceSingle<<<1, %d, 0, %lld>>>(), %d items per thread\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(ReduceSingle, dim3(1), dim3(%d), 0, %lld), %d items per thread\n",
                     single_tile_config.block_threads, (long long) stream, single_tile_config.items_per_thread);
 
                 // Invoke single_kernel
-                single_kernel<<<1, single_tile_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(single_kernel, dim3(1), dim3(single_tile_config.block_threads), 0, stream, 
                     d_in,
                     d_out,
                     num_items,
                     reduction_op);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -613,7 +614,7 @@ struct DeviceReduceDispatch
                 if (d_temp_storage == NULL)
                 {
                     // Return if the caller is simply requesting the size of the storage allocation
-                    return cudaSuccess;
+                    return hipSuccess;
                 }
 
                 // Alias the allocation for the privatized per-block reductions
@@ -626,24 +627,24 @@ struct DeviceReduceDispatch
                 if (reduce_range_config.grid_mapping == GRID_MAPPING_DYNAMIC)
                 {
                     // Prepare queue using a kernel so we know it gets prepared once per operation
-                    if (debug_synchronous) CubLog("Invoking prepare_drain_kernel<<<1, 1, 0, %lld>>>()\n", (long long) stream);
+                    if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(prepare_drain_kernel, dim3(1), dim3(1), 0, %lld)\n", (long long) stream);
 
                     // Invoke prepare_drain_kernel
-                    prepare_drain_kernel<<<1, 1, 0, stream>>>(queue, num_items);
+                    hipLaunchKernelGGL(prepare_drain_kernel, dim3(1), dim3(1), 0, stream, queue, num_items);
 
                     // Check for failure to launch
-                    if (CubDebug(error = cudaPeekAtLastError())) break;
+                    if (CubDebug(error = hipPeekAtLastError())) break;
 
                     // Sync the stream if specified to flush runtime errors
                     if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
                 }
 
                 // Log reduce_range_kernel configuration
-                if (debug_synchronous) CubLog("Invoking reduce_range_kernel<<<%d, %d, 0, %lld>>>(), %d items per thread, %d SM occupancy\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(reduce_range_kernel, dim3(%d), dim3(%d), 0, %lld), %d items per thread, %d SM occupancy\n",
                     reduce_range_grid_size, reduce_range_config.block_threads, (long long) stream, reduce_range_config.items_per_thread, reduce_range_sm_occupancy);
 
                 // Invoke reduce_range_kernel
-                reduce_range_kernel<<<reduce_range_grid_size, reduce_range_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(reduce_range_kernel, dim3(reduce_range_grid_size), dim3(reduce_range_config.block_threads), 0, stream, 
                     d_in,
                     d_block_reductions,
                     num_items,
@@ -652,24 +653,24 @@ struct DeviceReduceDispatch
                     reduction_op);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
 
                 // Log single_kernel configuration
-                if (debug_synchronous) CubLog("Invoking single_kernel<<<%d, %d, 0, %lld>>>(), %d items per thread\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(single_kernel, dim3(%d), dim3(%d), 0, %lld), %d items per thread\n",
                     1, single_tile_config.block_threads, (long long) stream, single_tile_config.items_per_thread);
 
                 // Invoke single_kernel
-                aggregate_kernel<<<1, single_tile_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(aggregate_kernel, dim3(1), dim3(single_tile_config.block_threads), 0, stream, 
                     d_block_reductions,
                     d_out,
                     reduce_range_grid_size,
                     reduction_op);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -687,17 +688,17 @@ struct DeviceReduceDispatch
      * Internal dispatch routine for computing a device-wide reduction
      */
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         Offset                      num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
-        cudaStream_t                stream,                             ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
+        hipStream_t                stream,                             ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous)                  ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get PTX version

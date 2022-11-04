@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRakingLayout provides a conflict-free shared memory layout abstraction for warp-raking across thread block data.
+ * hipcub::BlockRakingLayout provides a conflict-free shared memory layout abstraction for warp-raking across thread block data.
  */
 
 

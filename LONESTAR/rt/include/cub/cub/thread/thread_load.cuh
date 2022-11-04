@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 #include <iterator>
 
@@ -77,28 +77,28 @@ enum CacheLoadModifier
  */
 
 /**
- * \brief Thread utility for reading memory using cub::CacheLoadModifier cache modifiers.  Can be used to load any data type.
+ * \brief Thread utility for reading memory using hipcub::CacheLoadModifier cache modifiers.  Can be used to load any data type.
  *
  * \par Example
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/thread/thread_load.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/thread/thread_load.cuh>
  *
  * // 32-bit load using cache-global modifier:
  * int *d_in;
- * int val = cub::ThreadLoad<cub::LOAD_CA>(d_in + threadIdx.x);
+ * int val = hipcub::ThreadLoad<hipcub::LOAD_CA>(d_in + threadIdx.x);
  *
  * // 16-bit load using default modifier
  * short *d_in;
- * short val = cub::ThreadLoad<cub::LOAD_DEFAULT>(d_in + threadIdx.x);
+ * short val = hipcub::ThreadLoad<hipcub::LOAD_DEFAULT>(d_in + threadIdx.x);
  *
  * // 256-bit load using cache-volatile modifier
  * double4 *d_in;
- * double4 val = cub::ThreadLoad<cub::LOAD_CV>(d_in + threadIdx.x);
+ * double4 val = hipcub::ThreadLoad<hipcub::LOAD_CV>(d_in + threadIdx.x);
  *
  * // 96-bit load using cache-streaming modifier
  * struct TestFoo { bool a; short b; };
  * TestFoo *d_struct;
- * TestFoo val = cub::ThreadLoad<cub::LOAD_CS>(d_in + threadIdx.x);
+ * TestFoo val = hipcub::ThreadLoad<hipcub::LOAD_CS>(d_in + threadIdx.x);
  * \endcode
  *
  * \tparam MODIFIER             <b>[inferred]</b> CacheLoadModifier enumeration

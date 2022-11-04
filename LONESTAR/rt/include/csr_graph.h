@@ -104,9 +104,9 @@ struct CSRGraph {
 
 
 struct CSRGraphTex : CSRGraph {
-  cudaTextureObject_t edge_dst_tx;
-  cudaTextureObject_t row_start_tx;
-  cudaTextureObject_t node_data_tx;
+  hipTextureObject_t edge_dst_tx;
+  hipTextureObject_t row_start_tx;
+  hipTextureObject_t node_data_tx;
 
   void copy_to_gpu(struct CSRGraphTex &copygraph);
   unsigned allocOnDevice();

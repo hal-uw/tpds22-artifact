@@ -306,12 +306,12 @@ struct CachingDeviceAllocator
     /**
      * \brief Sets the limit on the number bytes this allocator is allowed to cache per device.
      */
-    cudaError_t SetMaxCachedBytes(
+    hipError_t SetMaxCachedBytes(
         size_t max_cached_bytes)
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
 
         // Lock
@@ -324,7 +324,7 @@ struct CachingDeviceAllocator
         // Unlock
         Unlock(&spin_lock);
 
-        return cudaSuccess;
+        return hipSuccess;
 
     #endif // CUB_PTX_ARCH
     }
@@ -333,19 +333,19 @@ struct CachingDeviceAllocator
     /**
      * \brief Provides a suitable allocation of device memory for the given size on the specified device
      */
-    cudaError_t DeviceAllocate(
+    hipError_t DeviceAllocate(
         void** d_ptr,
         size_t bytes,
         int device)
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
 
         bool locked                     = false;
         int entrypoint_device           = INVALID_DEVICE_ORDINAL;
-        cudaError_t error               = cudaSuccess;
+        hipError_t error               = hipSuccess;
 
         // Round up to nearest bin size
         unsigned int bin;
@@ -399,11 +399,11 @@ struct CachingDeviceAllocator
                 }
 
                 // Set to specified device
-                if (CubDebug(error = cudaGetDevice(&entrypoint_device))) break;
-                if (CubDebug(error = cudaSetDevice(device))) break;
+                if (CubDebug(error = hipGetDevice(&entrypoint_device))) break;
+                if (CubDebug(error = hipSetDevice(device))) break;
 
                 // Allocate
-                if (CubDebug(error = cudaMalloc(&search_key.d_ptr, search_key.bytes))) break;
+                if (CubDebug(error = hipMalloc(&search_key.d_ptr, search_key.bytes))) break;
 
                 // Lock
                 if (!locked) {
@@ -431,7 +431,7 @@ struct CachingDeviceAllocator
         // Attempt to revert back to previous device if necessary
         if (entrypoint_device != INVALID_DEVICE_ORDINAL)
         {
-            if (CubDebug(error = cudaSetDevice(entrypoint_device))) return error;
+            if (CubDebug(error = hipSetDevice(entrypoint_device))) return error;
         }
 
         return error;
@@ -443,18 +443,18 @@ struct CachingDeviceAllocator
     /**
      * \brief Provides a suitable allocation of device memory for the given size on the current device
      */
-    cudaError_t DeviceAllocate(
+    hipError_t DeviceAllocate(
         void** d_ptr,
         size_t bytes)
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
-        cudaError_t error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do {
             int current_device;
-            if (CubDebug(error = cudaGetDevice(&current_device))) break;
+            if (CubDebug(error = hipGetDevice(&current_device))) break;
             if (CubDebug(error = DeviceAllocate(d_ptr, bytes, current_device))) break;
         } while(0);
 
@@ -467,18 +467,18 @@ struct CachingDeviceAllocator
     /**
      * \brief Frees a live allocation of device memory on the specified device, returning it to the allocator
      */
-    cudaError_t DeviceFree(
+    hipError_t DeviceFree(
         void* d_ptr,
         int device)
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
 
         bool locked                     = false;
         int entrypoint_device           = INVALID_DEVICE_ORDINAL;
-        cudaError_t error               = cudaSuccess;
+        hipError_t error               = hipSuccess;
 
         BlockDescriptor search_key(d_ptr, device);
 
@@ -494,7 +494,7 @@ struct CachingDeviceAllocator
             if (block_itr == live_blocks.end())
             {
                 // Cannot find pointer
-                if (CubDebug(error = cudaErrorUnknown)) break;
+                if (CubDebug(error = hipErrorUnknown)) break;
             }
             else
             {
@@ -521,11 +521,11 @@ struct CachingDeviceAllocator
                     }
 
                     // Set to specified device
-                    if (CubDebug(error = cudaGetDevice(&entrypoint_device))) break;
-                    if (CubDebug(error = cudaSetDevice(device))) break;
+                    if (CubDebug(error = hipGetDevice(&entrypoint_device))) break;
+                    if (CubDebug(error = hipSetDevice(device))) break;
 
                     // Free device memory
-                    if (CubDebug(error = cudaFree(d_ptr))) break;
+                    if (CubDebug(error = hipFree(d_ptr))) break;
 
                     if (debug) CubLog("\tdevice %d freed %lld bytes.  %lld available blocks cached (%lld bytes), %lld live blocks outstanding.\n",
                         device, (long long) search_key.bytes, (long long) cached_blocks.size(), (long long) cached_bytes[device], (long long) live_blocks.size());
@@ -542,7 +542,7 @@ struct CachingDeviceAllocator
         // Attempt to revert back to entry-point device if necessary
         if (entrypoint_device != INVALID_DEVICE_ORDINAL)
         {
-            if (CubDebug(error = cudaSetDevice(entrypoint_device))) return error;
+            if (CubDebug(error = hipSetDevice(entrypoint_device))) return error;
         }
 
         return error;
@@ -554,19 +554,19 @@ struct CachingDeviceAllocator
     /**
      * \brief Frees a live allocation of device memory on the current device, returning it to the allocator
      */
-    cudaError_t DeviceFree(
+    hipError_t DeviceFree(
         void* d_ptr)
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
 
         int current_device;
-        cudaError_t error = cudaSuccess;
+        hipError_t error = hipSuccess;
 
         do {
-            if (CubDebug(error = cudaGetDevice(&current_device))) break;
+            if (CubDebug(error = hipGetDevice(&current_device))) break;
             if (CubDebug(error = DeviceFree(d_ptr, current_device))) break;
         } while(0);
 
@@ -579,14 +579,14 @@ struct CachingDeviceAllocator
     /**
      * \brief Frees all cached device allocations on all devices
      */
-    cudaError_t FreeAllCached()
+    hipError_t FreeAllCached()
     {
     #if (CUB_PTX_ARCH > 0)
         // Caching functionality only defined on host
-        return CubDebug(cudaErrorInvalidConfiguration);
+        return CubDebug(hipErrorInvalidConfiguration);
     #else
 
-        cudaError_t error         = cudaSuccess;
+        hipError_t error         = hipSuccess;
         bool locked               = false;
         int entrypoint_device     = INVALID_DEVICE_ORDINAL;
         int current_device        = INVALID_DEVICE_ORDINAL;
@@ -605,18 +605,18 @@ struct CachingDeviceAllocator
             // Get entry-point device ordinal if necessary
             if (entrypoint_device == INVALID_DEVICE_ORDINAL)
             {
-                if (CubDebug(error = cudaGetDevice(&entrypoint_device))) break;
+                if (CubDebug(error = hipGetDevice(&entrypoint_device))) break;
             }
 
             // Set current device ordinal if necessary
             if (begin->device != current_device)
             {
-                if (CubDebug(error = cudaSetDevice(begin->device))) break;
+                if (CubDebug(error = hipSetDevice(begin->device))) break;
                 current_device = begin->device;
             }
 
             // Free device memory
-            if (CubDebug(error = cudaFree(begin->d_ptr))) break;
+            if (CubDebug(error = hipFree(begin->d_ptr))) break;
 
             // Reduce balance and erase entry
             cached_bytes[current_device] -= begin->bytes;
@@ -635,7 +635,7 @@ struct CachingDeviceAllocator
         // Attempt to revert back to entry-point device if necessary
         if (entrypoint_device != INVALID_DEVICE_ORDINAL)
         {
-            if (CubDebug(error = cudaSetDevice(entrypoint_device))) return error;
+            if (CubDebug(error = hipSetDevice(entrypoint_device))) return error;
         }
 
         return error;

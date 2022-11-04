@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -44,7 +45,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -67,11 +68,11 @@ CachingDeviceAllocator  g_allocator(true);
  */
 template <typename InputIterator, typename OutputIterator, typename ScanOp, typename Identity, typename Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -80,10 +81,10 @@ cudaError_t Dispatch(
     ScanOp              scan_op,
     Identity            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceScan::ExclusiveScan(d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, identity, num_items, stream, debug_synchronous);
@@ -97,11 +98,11 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator, typename Identity, typename Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -110,10 +111,10 @@ cudaError_t Dispatch(
     Sum                 scan_op,
     Identity            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, stream, debug_synchronous);
@@ -127,11 +128,11 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator, typename ScanOp, typename Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -140,10 +141,10 @@ cudaError_t Dispatch(
     ScanOp              scan_op,
     NullType            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceScan::InclusiveScan(d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, num_items, stream, debug_synchronous);
@@ -157,11 +158,11 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator, typename Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -170,10 +171,10 @@ cudaError_t Dispatch(
     Sum                 scan_op,
     NullType            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, stream, debug_synchronous);
@@ -189,11 +190,11 @@ cudaError_t Dispatch(
  * Dispatch to exclusive scan entrypoint
  */
 template <typename InputIterator, typename OutputIterator, typename ScanOp, typename Identity, typename Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -202,7 +203,7 @@ cudaError_t Dispatch(
     ScanOp              scan_op,
     Identity            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -221,7 +222,7 @@ cudaError_t Dispatch(
         }
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -229,11 +230,11 @@ cudaError_t Dispatch(
  * Dispatch to exclusive sum entrypoint
  */
 template <typename InputIterator, typename OutputIterator, typename Identity, typename Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -242,7 +243,7 @@ cudaError_t Dispatch(
     Sum                 scan_op,
     Identity            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -261,7 +262,7 @@ cudaError_t Dispatch(
         }
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -269,11 +270,11 @@ cudaError_t Dispatch(
  * Dispatch to inclusive scan entrypoint
  */
 template <typename InputIterator, typename OutputIterator, typename ScanOp, typename Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -282,7 +283,7 @@ cudaError_t Dispatch(
     ScanOp              scan_op,
     NullType            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -301,7 +302,7 @@ cudaError_t Dispatch(
         }
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -309,11 +310,11 @@ cudaError_t Dispatch(
  * Dispatch to inclusive sum entrypoint
  */
 template <typename InputIterator, typename OutputIterator, typename Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -322,7 +323,7 @@ cudaError_t Dispatch(
     Sum                 scan_op,
     NullType            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -341,7 +342,7 @@ cudaError_t Dispatch(
         }
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -357,7 +358,7 @@ template <typename InputIterator, typename OutputIterator, typename ScanOp, type
 __global__ void CnpDispatchKernel(
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              temp_storage_bytes,
@@ -369,7 +370,7 @@ __global__ void CnpDispatchKernel(
     bool                debug_synchronous)
 {
 #ifndef CUB_CDP
-    *d_cdp_error = cudaErrorNotSupported;
+    *d_cdp_error = hipErrorNotSupported;
 #else
     *d_cdp_error = Dispatch(Int2Type<CUB>(), timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, identity, num_items, 0, debug_synchronous);
     *d_temp_storage_bytes = temp_storage_bytes;
@@ -381,11 +382,11 @@ __global__ void CnpDispatchKernel(
  * Dispatch to CDP kernel
  */
 template <typename InputIterator, typename OutputIterator, typename ScanOp, typename Identity, typename Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CDP>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -394,18 +395,18 @@ cudaError_t Dispatch(
     ScanOp              scan_op,
     Identity            identity,
     Offset              num_items,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to invoke device-side dispatch
-    CnpDispatchKernel<<<1,1>>>(timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, identity, num_items, debug_synchronous);
+    hipLaunchKernelGGL(CnpDispatchKernel, dim3(1), dim3(1), 0, 0, timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, identity, num_items, debug_synchronous);
 
     // Copy out temp_storage_bytes
-    CubDebugExit(cudaMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, hipMemcpyDeviceToHost));
 
     // Copy out error
-    cudaError_t retval;
-    CubDebugExit(cudaMemcpy(&retval, d_cdp_error, sizeof(cudaError_t) * 1, cudaMemcpyDeviceToHost));
+    hipError_t retval;
+    CubDebugExit(hipMemcpy(&retval, d_cdp_error, sizeof(hipError_t) * 1, hipMemcpyDeviceToHost));
     return retval;
 }
 
@@ -525,9 +526,9 @@ void Test(
 
     // Allocate CDP device arrays
     size_t          *d_temp_storage_bytes = NULL;
-    cudaError_t     *d_cdp_error = NULL;
+    hipError_t     *d_cdp_error = NULL;
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_temp_storage_bytes,  sizeof(size_t) * 1));
-    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,   sizeof(cudaError_t) * 1));
+    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,   sizeof(hipError_t) * 1));
 
     // Allocate temporary storage
     void            *d_temp_storage = NULL;
@@ -536,7 +537,7 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Clear device output array
-    CubDebugExit(cudaMemset(d_out, 0, sizeof(T) * num_items));
+    CubDebugExit(hipMemset(d_out, 0, sizeof(T) * num_items));
 
     // Run warmup/correctness iteration
     CubDebugExit(Dispatch(Int2Type<BACKEND>(), 1, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, scan_op, identity, num_items, 0, true));
@@ -593,7 +594,7 @@ void TestPointer(
     IdentityT       identity,
     char*           type_string)
 {
-    printf("\nPointer %s %s cub::DeviceScan::%s %d items, %s %d-byte elements, gen-mode %s\n",
+    printf("\nPointer %s %s hipcub::DeviceScan::%s %d items, %s %d-byte elements, gen-mode %s\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<IdentityT, NullType>::VALUE) ? "Inclusive" : "Exclusive",
         (Equals<ScanOp, Sum>::VALUE) ? "Sum" : "Scan",
@@ -616,7 +617,7 @@ void TestPointer(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * num_items, hipMemcpyHostToDevice));
 
     // Run Test
     Test<BACKEND>(d_in, h_reference, num_items, scan_op, identity, type_string);
@@ -642,7 +643,7 @@ void TestIterator(
     IdentityT       identity,
     char*           type_string)
 {
-    printf("\nIterator %s %s cub::DeviceScan::%s %d items, %s %d-byte elements\n",
+    printf("\nIterator %s %s hipcub::DeviceScan::%s %d items, %s %d-byte elements\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<IdentityT, NullType>::VALUE) ? "Inclusive" : "Exclusive",
         (Equals<ScanOp, Sum>::VALUE) ? "Sum" : "Scan",
@@ -805,7 +806,7 @@ int main(int argc, char** argv)
 
     // Get device ordinal
     int device_ordinal;
-    CubDebugExit(cudaGetDevice(&device_ordinal));
+    CubDebugExit(hipGetDevice(&device_ordinal));
 
     // Get device SM version
     int sm_version;

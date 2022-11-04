@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -27,7 +28,7 @@
  ******************************************************************************/
 
 /******************************************************************************
- * Simple demonstration of cub::BlockRadixSort
+ * Simple demonstration of hipcub::BlockRadixSort
  ******************************************************************************/
 
 // Ensure printing of CUDA runtime errors to console (define before including cub.h)
@@ -43,7 +44,7 @@
 
 #include "../../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -183,9 +184,9 @@ void Test()
     Key *d_in       = NULL;
     Key *d_out      = NULL;
     clock_t *d_elapsed  = NULL;
-    CubDebugExit(cudaMalloc((void**)&d_in,          sizeof(Key) * TILE_SIZE * g_grid_size));
-    CubDebugExit(cudaMalloc((void**)&d_out,         sizeof(Key) * TILE_SIZE * g_grid_size));
-    CubDebugExit(cudaMalloc((void**)&d_elapsed,     sizeof(clock_t) * g_grid_size));
+    CubDebugExit(hipMalloc((void**)&d_in,          sizeof(Key) * TILE_SIZE * g_grid_size));
+    CubDebugExit(hipMalloc((void**)&d_out,         sizeof(Key) * TILE_SIZE * g_grid_size));
+    CubDebugExit(hipMalloc((void**)&d_elapsed,     sizeof(clock_t) * g_grid_size));
 
     // Display input problem data
     if (g_verbose)
@@ -201,21 +202,21 @@ void Test()
     CubDebugExit(MaxSmOccupancy(max_sm_occupancy, BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD>, BLOCK_THREADS));
 
     // Copy problem to device
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(Key) * TILE_SIZE * g_grid_size, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(Key) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice));
 
     printf("BlockRadixSort %d items (%d timing iterations, %d blocks, %d threads, %d items per thread, %d SM occupancy):\n",
         TILE_SIZE * g_grid_size, g_timing_iterations, g_grid_size, BLOCK_THREADS, ITEMS_PER_THREAD, max_sm_occupancy);
     fflush(stdout);
 
     // Run kernel once to prime caches and check result
-    BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD><<<g_grid_size, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD>), dim3(g_grid_size), dim3(BLOCK_THREADS), 0, 0, 
         d_in,
         d_out,
         d_elapsed);
 
     // Check for kernel errors and STDIO from the kernel, if any
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Check results
     printf("\tOutput items: ");
@@ -234,7 +235,7 @@ void Test()
         timer.Start();
 
         // Run kernel
-        BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD><<<g_grid_size, BLOCK_THREADS>>>(
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockSortKernel<Key, BLOCK_THREADS, ITEMS_PER_THREAD>), dim3(g_grid_size), dim3(BLOCK_THREADS), 0, 0, 
             d_in,
             d_out,
             d_elapsed);
@@ -243,13 +244,13 @@ void Test()
         elapsed_millis += timer.ElapsedMillis();
 
         // Copy clocks from device
-        CubDebugExit(cudaMemcpy(h_elapsed, d_elapsed, sizeof(clock_t) * g_grid_size, cudaMemcpyDeviceToHost));
+        CubDebugExit(hipMemcpy(h_elapsed, d_elapsed, sizeof(clock_t) * g_grid_size, hipMemcpyDeviceToHost));
         for (int i = 0; i < g_grid_size; i++)
             elapsed_clocks += h_elapsed[i];
     }
 
     // Check for kernel errors and STDIO from the kernel, if any
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Display timing results
     float avg_millis            = elapsed_millis / g_timing_iterations;
@@ -267,9 +268,9 @@ void Test()
     if (h_in) delete[] h_in;
     if (h_reference) delete[] h_reference;
     if (h_elapsed) delete[] h_elapsed;
-    if (d_in) CubDebugExit(cudaFree(d_in));
-    if (d_out) CubDebugExit(cudaFree(d_out));
-    if (d_elapsed) CubDebugExit(cudaFree(d_elapsed));
+    if (d_in) CubDebugExit(hipFree(d_in));
+    if (d_out) CubDebugExit(hipFree(d_out));
+    if (d_elapsed) CubDebugExit(hipFree(d_elapsed));
 }
 
 

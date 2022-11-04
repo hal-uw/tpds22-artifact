@@ -46,7 +46,7 @@
 
 #include "../../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     // Initialize device
     CubDebugExit(args.DeviceInit());
 
-    printf("cub::DeviceReduce::Sum() %d items (%d-byte elements)\n",
+    printf("hipcub::DeviceReduce::Sum() %d items (%d-byte elements)\n",
         num_items, (int) sizeof(int));
     fflush(stdout);
 
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(int) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(int) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(int) * num_items, hipMemcpyHostToDevice));
 
     // Allocate device output array
     int *d_out = NULL;

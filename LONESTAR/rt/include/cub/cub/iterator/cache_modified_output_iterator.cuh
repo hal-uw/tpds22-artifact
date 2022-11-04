@@ -80,13 +80,13 @@ namespace cub {
  * (i.e., write-through to system memory).
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/cache_modified_output_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/cache_modified_output_iterator.cuh>
  *
  * // Declare, allocate, and initialize a device array
  * double *d_out;              // e.g., [, , , , , , ]
  *
  * // Create an iterator wrapper
- * cub::CacheModifiedOutputIterator<cub::STORE_WT, double> itr(d_out);
+ * hipcub::CacheModifiedOutputIterator<hipcub::STORE_WT, double> itr(d_out);
  *
  * // Within device code:
  * itr[0]  = 8.0;
@@ -98,7 +98,7 @@ namespace cub {
  * \par Usage Considerations
  * - Can only be dereferenced within device code
  *
- * \tparam CacheStoreModifier     The cub::CacheStoreModifier to use when accessing data
+ * \tparam CacheStoreModifier     The hipcub::CacheStoreModifier to use when accessing data
  * \tparam ValueType            The value type of this iterator
  * \tparam Offset               The difference type of this iterator (Default: \p ptrdiff_t)
  */

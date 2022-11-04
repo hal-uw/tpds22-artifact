@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 #pragma once
 /*
    aolist.h
@@ -11,7 +12,7 @@
    Author: Sreepathi Pai <sreepai@ices.utexas.edu> 
 */
 
-#include "cub/cub.cuh"
+#include "hipcub/hipcub.hpp"
 #include "cutil_subset.h"
 #include "bmk2.h"
 #include <kernels/mergesort.cuh>
@@ -38,8 +39,8 @@ struct AppendOnlyList {
     } else {
       list.alloc(nsize);
       dl = list.gpu_wr_ptr();
-      CUDA_SAFE_CALL(cudaMalloc(&dindex, 1 * sizeof(int)));
-      CUDA_SAFE_CALL(cudaMemcpy((void *) dindex, &zero, 1 * sizeof(zero), cudaMemcpyHostToDevice));
+      CUDA_SAFE_CALL(hipMalloc(&dindex, 1 * sizeof(int)));
+      CUDA_SAFE_CALL(hipMemcpy((void *) dindex, &zero, 1 * sizeof(zero), hipMemcpyHostToDevice));
       index = 0;
     }
   }
@@ -68,7 +69,7 @@ struct AppendOnlyList {
 
   void reset()
   {
-    CUDA_SAFE_CALL(cudaMemcpy((void *) dindex, &zero, 1 * sizeof(zero), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(hipMemcpy((void *) dindex, &zero, 1 * sizeof(zero), hipMemcpyHostToDevice));
   }
 
   __device__ __host__
@@ -77,7 +78,7 @@ struct AppendOnlyList {
 #ifdef __CUDA_ARCH__    
     return *dindex;
 #else
-    CUDA_SAFE_CALL(cudaMemcpy(&index, (void *) dindex, 1 * sizeof(index), cudaMemcpyDeviceToHost));
+    CUDA_SAFE_CALL(hipMemcpy(&index, (void *) dindex, 1 * sizeof(index), hipMemcpyDeviceToHost));
     return index;
 #endif
   }
@@ -97,7 +98,7 @@ struct AppendOnlyList {
   {
     if(id < *dindex)
       {
-	item = cub::ThreadLoad<cub::LOAD_CG>(dl + id);
+	item = hipcub::ThreadLoad<hipcub::LOAD_CG>(dl + id);
 	//item = dwl[id];
 	return 1;
       }
@@ -131,8 +132,8 @@ struct AppendOnlyList {
       assert(lindex <= size);
     }
     
-    lindex = cub::ShuffleBroadcast(lindex, first);
-    //lindex = cub::ShuffleIndex(lindex, first); // CUB > 1.3.1
+    lindex = hipcub::ShuffleBroadcast(lindex, first);
+    //lindex = hipcub::ShuffleIndex(lindex, first); // CUB > 1.3.1
     return lindex + offset;
   }
 
@@ -182,7 +183,7 @@ struct AppendOnlyList {
 	  }
 
 	//dwl[queue_index + thread_data] = item;
-	cub::ThreadStore<cub::STORE_CG>(dl + queue_index + thread_data, item);
+	hipcub::ThreadStore<hipcub::STORE_CG>(dl + queue_index + thread_data, item);
       }
 
     return total_items;
@@ -225,7 +226,7 @@ struct AppendOnlyList {
     TRACE of = trace_open(n, "w");
     int nsize = instr_read_array(n, of, sizeof(int), size, list.cpu_wr_ptr(true));
     list.gpu_rd_ptr();    
-    check_cuda(cudaMemcpy((void *) dindex, &nsize, 1 * sizeof(nsize), cudaMemcpyHostToDevice));
+    check_cuda(hipMemcpy((void *) dindex, &nsize, 1 * sizeof(nsize), hipMemcpyHostToDevice));
     trace_close(of);
     return;
   }

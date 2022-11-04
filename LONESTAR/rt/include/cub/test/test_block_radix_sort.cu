@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -44,7 +45,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -150,7 +151,7 @@ template <
     int                 RADIX_BITS,
     bool                MEMOIZE_OUTER_SCAN,
     BlockScanAlgorithm  INNER_SCAN_ALGORITHM,
-    cudaSharedMemConfig SMEM_CONFIG,
+    hipSharedMemConfig SMEM_CONFIG,
     int                 DESCENDING,
     int                 BLOCKED_OUTPUT,
     typename            Key,
@@ -320,7 +321,7 @@ template <
     int                     RADIX_BITS,
     bool                    MEMOIZE_OUTER_SCAN,
     BlockScanAlgorithm      INNER_SCAN_ALGORITHM,
-    cudaSharedMemConfig     SMEM_CONFIG,
+    hipSharedMemConfig     SMEM_CONFIG,
     bool                    DESCENDING,
     bool                    BLOCKED_OUTPUT,
     typename                Key,
@@ -356,8 +357,8 @@ void TestDriver(
         TILE_SIZE, entropy_reduction, begin_bit, end_bit);
 
     // Copy problem to device
-    CubDebugExit(cudaMemcpy(d_keys, h_keys, sizeof(Key) * TILE_SIZE, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_values, h_values, sizeof(Value) * TILE_SIZE, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_keys, h_keys, sizeof(Key) * TILE_SIZE, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_values, h_values, sizeof(Value) * TILE_SIZE, hipMemcpyHostToDevice));
 
     printf("%s "
         "BLOCK_THREADS(%d) "
@@ -389,15 +390,15 @@ void TestDriver(
             end_bit);
 
     // Set shared memory config
-    cudaDeviceSetSharedMemConfig(SMEM_CONFIG);
+    hipDeviceSetSharedMemConfig(SMEM_CONFIG);
 
     // Run kernel
-    Kernel<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, SMEM_CONFIG, DESCENDING, BLOCKED_OUTPUT><<<1, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Kernel<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, SMEM_CONFIG, DESCENDING, BLOCKED_OUTPUT>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
         d_keys, d_values, begin_bit, end_bit, d_elapsed);
 
     // Flush kernel output / errors
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Check keys results
     printf("\tKeys: ");
@@ -439,7 +440,7 @@ template <
     int                     RADIX_BITS,
     bool                    MEMOIZE_OUTER_SCAN,
     BlockScanAlgorithm      INNER_SCAN_ALGORITHM,
-    cudaSharedMemConfig     SMEM_CONFIG,
+    hipSharedMemConfig     SMEM_CONFIG,
     bool                    DESCENDING,
     bool                    BLOCKED_OUTPUT,
     typename                Key,
@@ -480,7 +481,7 @@ template <
     int                     RADIX_BITS,
     bool                    MEMOIZE_OUTER_SCAN,
     BlockScanAlgorithm      INNER_SCAN_ALGORITHM,
-    cudaSharedMemConfig     SMEM_CONFIG,
+    hipSharedMemConfig     SMEM_CONFIG,
     bool                    DESCENDING,
     bool                    BLOCKED_OUTPUT,
     typename                Key,
@@ -498,7 +499,7 @@ template <
     int                     RADIX_BITS,
     bool                    MEMOIZE_OUTER_SCAN,
     BlockScanAlgorithm      INNER_SCAN_ALGORITHM,
-    cudaSharedMemConfig     SMEM_CONFIG,
+    hipSharedMemConfig     SMEM_CONFIG,
     typename                Key,
     typename                Value>
 void Test()
@@ -537,9 +538,9 @@ template <
 void TestKeys()
 {
     // Test keys-only sorting with both smem configs
-    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, cudaSharedMemBankSizeFourByte, Key, NullType>();    // Keys-only (4-byte smem bank config)
+    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, hipSharedMemBankSizeFourByte, Key, NullType>();    // Keys-only (4-byte smem bank config)
 #if !defined(SM100) && !defined(SM110) && !defined(SM130) && !defined(SM200)
-    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, cudaSharedMemBankSizeEightByte, Key, NullType>();   // Keys-only (8-byte smem bank config)
+    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, hipSharedMemBankSizeEightByte, Key, NullType>();   // Keys-only (8-byte smem bank config)
 #endif
 }
 
@@ -557,9 +558,9 @@ template <
 void TestKeysAndPairs()
 {
     // Test pairs sorting with only 4-byte configs
-    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, cudaSharedMemBankSizeFourByte, Key, char>();        // With small-values
-    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, cudaSharedMemBankSizeFourByte, Key, Key>();         // With same-values
-    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, cudaSharedMemBankSizeFourByte, Key, TestFoo>();     // With large values
+    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, hipSharedMemBankSizeFourByte, Key, char>();        // With small-values
+    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, hipSharedMemBankSizeFourByte, Key, Key>();         // With same-values
+    Test<BLOCK_THREADS, ITEMS_PER_THREAD, RADIX_BITS, MEMOIZE_OUTER_SCAN, INNER_SCAN_ALGORITHM, hipSharedMemBankSizeFourByte, Key, TestFoo>();     // With large values
 }
 
 
@@ -692,9 +693,9 @@ int main(int argc, char** argv)
 
     // Compile/run quick tests
     typedef unsigned int T;
-    TestDriver<64, 17, 4, true, BLOCK_SCAN_WARP_SCANS, cudaSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
-    TestDriver<96, 8, 4, true, BLOCK_SCAN_WARP_SCANS, cudaSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
-    TestDriver<128, 2, 4, true, BLOCK_SCAN_WARP_SCANS, cudaSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
+    TestDriver<64, 17, 4, true, BLOCK_SCAN_WARP_SCANS, hipSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
+    TestDriver<96, 8, 4, true, BLOCK_SCAN_WARP_SCANS, hipSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
+    TestDriver<128, 2, 4, true, BLOCK_SCAN_WARP_SCANS, hipSharedMemBankSizeFourByte, false, false, T, NullType>(RANDOM, 0, 0, sizeof(T) * 8);
 
 #else
 

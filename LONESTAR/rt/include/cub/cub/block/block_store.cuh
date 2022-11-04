@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -122,10 +123,10 @@ __device__ __forceinline__ void StoreDirectBlocked(
  * \blocked
  *
  * The output offset (\p block_ptr + \p block_offset) must be quad-item aligned,
- * which is the default starting offset returned by \p cudaMalloc()
+ * which is the default starting offset returned by \p hipMalloc()
  *
  * \par
- * The following conditions will prevent vectorization and storing will fall back to cub::BLOCK_STORE_DIRECT:
+ * The following conditions will prevent vectorization and storing will fall back to hipcub::BLOCK_STORE_DIRECT:
  *   - \p ITEMS_PER_THREAD is odd
  *   - The data type \p T is not a built-in primitive or CUDA vector type (e.g., \p short, \p int2, \p double, \p float2, etc.)
  *
@@ -337,7 +338,7 @@ __device__ __forceinline__ void StoreDirectWarpStriped(
 //-----------------------------------------------------------------------------
 
 /**
- * \brief cub::BlockStoreAlgorithm enumerates alternative algorithms for cub::BlockStore to write a blocked arrangement of items across a CUDA thread block to a linear segment of memory.
+ * \brief hipcub::BlockStoreAlgorithm enumerates alternative algorithms for hipcub::BlockStore to write a blocked arrangement of items across a CUDA thread block to a linear segment of memory.
  */
 enum BlockStoreAlgorithm
 {
@@ -368,7 +369,7 @@ enum BlockStoreAlgorithm
      * - The utilization of memory transactions (coalescing) remains high until the the
      *   access stride between threads (i.e., the number items per thread) exceeds the
      *   maximum vector store width (typically 4 items or 64B, whichever is lower).
-     * - The following conditions will prevent vectorization and writing will fall back to cub::BLOCK_STORE_DIRECT:
+     * - The following conditions will prevent vectorization and writing will fall back to hipcub::BLOCK_STORE_DIRECT:
      *   - \p ITEMS_PER_THREAD is odd
      *   - The \p OutputIterator is not a simple pointer type
      *   - The block output offset is not quadword-aligned
@@ -380,7 +381,7 @@ enum BlockStoreAlgorithm
      * \par Overview
      * A [<em>blocked arrangement</em>](index.html#sec5sec3) is locally
      * transposed into a [<em>striped arrangement</em>](index.html#sec5sec3)
-     * which is then written to memory.  More specifically, cub::BlockExchange
+     * which is then written to memory.  More specifically, hipcub::BlockExchange
      * used to locally reorder the items into a
      * [<em>striped arrangement</em>](index.html#sec5sec3), after which the
      * thread block writes items in a parallel "strip-mining" fashion: consecutive
@@ -391,7 +392,7 @@ enum BlockStoreAlgorithm
      * - The utilization of memory transactions (coalescing) remains high regardless
      *   of items written per thread.
      * - The local reordering incurs slightly longer latencies and throughput than the
-     *   direct cub::BLOCK_STORE_DIRECT and cub::BLOCK_STORE_VECTORIZE alternatives.
+     *   direct hipcub::BLOCK_STORE_DIRECT and hipcub::BLOCK_STORE_VECTORIZE alternatives.
      */
     BLOCK_STORE_TRANSPOSE,
 
@@ -399,7 +400,7 @@ enum BlockStoreAlgorithm
      * \par Overview
      * A [<em>blocked arrangement</em>](index.html#sec5sec3) is locally
      * transposed into a [<em>warp-striped arrangement</em>](index.html#sec5sec3)
-     * which is then written to memory.  More specifically, cub::BlockExchange used
+     * which is then written to memory.  More specifically, hipcub::BlockExchange used
      * to locally reorder the items into a
      * [<em>warp-striped arrangement</em>](index.html#sec5sec3), after which
      * each warp writes its own contiguous segment in a parallel "strip-mining" fashion:
@@ -410,7 +411,7 @@ enum BlockStoreAlgorithm
      * - The utilization of memory transactions (coalescing) remains high regardless
      *   of items written per thread.
      * - The local reordering incurs slightly longer latencies and throughput than the
-     *   direct cub::BLOCK_STORE_DIRECT and cub::BLOCK_STORE_VECTORIZE alternatives.
+     *   direct hipcub::BLOCK_STORE_DIRECT and hipcub::BLOCK_STORE_VECTORIZE alternatives.
      */
     BLOCK_STORE_WARP_TRANSPOSE,
 };
@@ -424,7 +425,7 @@ enum BlockStoreAlgorithm
  * \tparam OutputIterator       The input iterator type \iterator.
  * \tparam BLOCK_DIM_X          The thread block length in threads along the X dimension
  * \tparam ITEMS_PER_THREAD     The number of consecutive items partitioned onto each thread.
- * \tparam ALGORITHM            <b>[optional]</b> cub::BlockStoreAlgorithm tuning policy enumeration.  default: cub::BLOCK_STORE_DIRECT.
+ * \tparam ALGORITHM            <b>[optional]</b> hipcub::BlockStoreAlgorithm tuning policy enumeration.  default: hipcub::BLOCK_STORE_DIRECT.
  * \tparam WARP_TIME_SLICING    <b>[optional]</b> Whether or not only one warp's worth of shared memory should be allocated and time-sliced among block-warps during any load-related data transpositions (versus each warp having its own storage). (default: false)
  * \tparam BLOCK_DIM_Y          <b>[optional]</b> The thread block length in threads along the Y dimension (default: 1)
  * \tparam BLOCK_DIM_Z          <b>[optional]</b> The thread block length in threads along the Z dimension (default: 1)
@@ -432,20 +433,20 @@ enum BlockStoreAlgorithm
  *
  * \par Overview
  * - The BlockStore class provides a single data movement abstraction that can be specialized
- *   to implement different cub::BlockStoreAlgorithm strategies.  This facilitates different
+ *   to implement different hipcub::BlockStoreAlgorithm strategies.  This facilitates different
  *   performance policies for different architectures, data types, granularity sizes, etc.
  * - BlockStore can be optionally specialized by different data movement strategies:
- *   -# <b>cub::BLOCK_STORE_DIRECT</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3) of data is written
- *      directly to memory. [More...](\ref cub::BlockStoreAlgorithm)
- *   -# <b>cub::BLOCK_STORE_VECTORIZE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
+ *   -# <b>hipcub::BLOCK_STORE_DIRECT</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3) of data is written
+ *      directly to memory. [More...](\ref hipcub::BlockStoreAlgorithm)
+ *   -# <b>hipcub::BLOCK_STORE_VECTORIZE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
  *      of data is written directly to memory using CUDA's built-in vectorized stores as a
- *      coalescing optimization.  [More...](\ref cub::BlockStoreAlgorithm)
- *   -# <b>cub::BLOCK_STORE_TRANSPOSE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
+ *      coalescing optimization.  [More...](\ref hipcub::BlockStoreAlgorithm)
+ *   -# <b>hipcub::BLOCK_STORE_TRANSPOSE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
  *      is locally transposed into a [<em>striped arrangement</em>](index.html#sec5sec3) which is
- *      then written to memory.  [More...](\ref cub::BlockStoreAlgorithm)
- *   -# <b>cub::BLOCK_STORE_WARP_TRANSPOSE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
+ *      then written to memory.  [More...](\ref hipcub::BlockStoreAlgorithm)
+ *   -# <b>hipcub::BLOCK_STORE_WARP_TRANSPOSE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
  *      is locally transposed into a [<em>warp-striped arrangement</em>](index.html#sec5sec3) which is
- *      then written to memory.  [More...](\ref cub::BlockStoreAlgorithm)
+ *      then written to memory.  [More...](\ref hipcub::BlockStoreAlgorithm)
  * - \rowmajor
  *
  * \par A Simple Example
@@ -458,12 +459,12 @@ enum BlockStoreAlgorithm
  * efficiently coalesced using a warp-striped access pattern.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_store.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_store.cuh>
  *
  * __global__ void ExampleKernel(int *d_data, ...)
  * {
  *     // Specialize BlockStore for a 1D block of 128 threads owning 4 integer items each
- *     typedef cub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
+ *     typedef hipcub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
  *
  *     // Allocate shared memory for BlockStore
  *     __shared__ typename BlockStore::TempStorage temp_storage;
@@ -804,12 +805,12 @@ public:
      * efficiently coalesced using a warp-striped access pattern.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_store.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_store.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, ...)
      * {
      *     // Specialize BlockStore for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
+     *     typedef hipcub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
      *
      *     // Allocate shared memory for BlockStore
      *     __shared__ typename BlockStore::TempStorage temp_storage;
@@ -851,12 +852,12 @@ public:
      * efficiently coalesced using a warp-striped access pattern.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_store.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_store.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, int valid_items, ...)
      * {
      *     // Specialize BlockStore for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
+     *     typedef hipcub::BlockStore<int*, 128, 4, BLOCK_STORE_WARP_TRANSPOSE> BlockStore;
      *
      *     // Allocate shared memory for BlockStore
      *     __shared__ typename BlockStore::TempStorage temp_storage;

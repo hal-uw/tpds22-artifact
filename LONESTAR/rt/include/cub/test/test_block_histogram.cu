@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -44,7 +45,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -140,7 +141,7 @@ void Test(
 {
     int num_samples = BLOCK_THREADS * ITEMS_PER_THREAD;
 
-    printf("cub::BlockHistogram %s %d %s samples (%dB), %d bins, %d threads, gen-mode %s\n",
+    printf("hipcub::BlockHistogram %s %d %s samples (%dB), %d bins, %d threads, gen-mode %s\n",
         (ALGORITHM == BLOCK_HISTO_SORT) ? "BLOCK_HISTO_SORT" : "BLOCK_HISTO_ATOMIC",
         num_samples,
         type_string,
@@ -164,11 +165,11 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_histogram,   sizeof(int) * BINS));
 
     // Initialize/clear device arrays
-    CubDebugExit(cudaMemcpy(d_samples, h_samples, sizeof(SampleT) * num_samples, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_histogram, 0, sizeof(int) * BINS));
+    CubDebugExit(hipMemcpy(d_samples, h_samples, sizeof(SampleT) * num_samples, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_histogram, 0, sizeof(int) * BINS));
 
     // Run kernel
-    BlockHistogramKernel<BINS, BLOCK_THREADS, ITEMS_PER_THREAD, ALGORITHM><<<1, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockHistogramKernel<BINS, BLOCK_THREADS, ITEMS_PER_THREAD, ALGORITHM>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
         d_samples,
         d_histogram);
 
@@ -177,8 +178,8 @@ void Test(
     printf("\t%s\n\n", compare ? "FAIL" : "PASS");
 
     // Flush any stdout/stderr
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
     fflush(stdout);
     fflush(stderr);
 

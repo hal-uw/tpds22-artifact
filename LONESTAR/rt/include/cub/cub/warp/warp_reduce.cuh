@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::WarpReduce class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel reduction of items partitioned across a CUDA thread warp.
+ * The hipcub::WarpReduce class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel reduction of items partitioned across a CUDA thread warp.
  */
 
 #pragma once
@@ -80,12 +81,12 @@ namespace cub {
  * 128 threads (one per each of the 32-thread warps).
  * \par
  * \code
- * #include <cub/cub.cuh>
+ * #include <hipcub/hipcub.hpp>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize WarpReduce for type int
- *     typedef cub::WarpReduce<int> WarpReduce;
+ *     typedef hipcub::WarpReduce<int> WarpReduce;
  *
  *     // Allocate WarpReduce shared memory for 4 warps
  *     __shared__ typename WarpReduce::TempStorage temp_storage[4];
@@ -108,12 +109,12 @@ namespace cub {
  * 128 threads.
  * \par
  * \code
- * #include <cub/cub.cuh>
+ * #include <hipcub/hipcub.hpp>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize WarpReduce for type int
- *     typedef cub::WarpReduce<int> WarpReduce;
+ *     typedef hipcub::WarpReduce<int> WarpReduce;
  *
  *     // Allocate WarpReduce shared memory for one warp
  *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -224,12 +225,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for 4 warps
      *     __shared__ typename WarpReduce::TempStorage temp_storage[4];
@@ -266,12 +267,12 @@ public:
      * block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(int *d_data, int valid_items)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -318,12 +319,12 @@ public:
      * reduction within a block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -352,7 +353,7 @@ public:
         T                   input,              ///< [in] Calling thread's input
         Flag                head_flag)          ///< [in] Head flag denoting whether or not \p input is the start of a new segment
     {
-        return HeadSegmentedReduce(input, head_flag, cub::Sum());
+        return HeadSegmentedReduce(input, head_flag, hipcub::Sum());
     }
 
 
@@ -366,12 +367,12 @@ public:
      * reduction within a block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -399,7 +400,7 @@ public:
         T                   input,              ///< [in] Calling thread's input
         Flag                tail_flag)          ///< [in] Head flag denoting whether or not \p input is the start of a new segment
     {
-        return TailSegmentedReduce(input, tail_flag, cub::Sum());
+        return TailSegmentedReduce(input, tail_flag, hipcub::Sum());
     }
 
 
@@ -422,12 +423,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for 4 warps
      *     __shared__ typename WarpReduce::TempStorage temp_storage[4];
@@ -438,7 +439,7 @@ public:
      *     // Return the warp-wide reductions to each lane0
      *     int warp_id = threadIdx.x / 32;
      *     int aggregate = WarpReduce(temp_storage[warp_id]).Reduce(
-     *         thread_data, cub::Max());
+     *         thread_data, hipcub::Max());
      *
      * \endcode
      * \par
@@ -470,12 +471,12 @@ public:
      * block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(int *d_data, int valid_items)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -487,7 +488,7 @@ public:
      *
      *     // Return the warp-wide reductions to each lane0
      *     int aggregate = WarpReduce(temp_storage).Reduce(
-     *         thread_data, cub::Max(), valid_items);
+     *         thread_data, hipcub::Max(), valid_items);
      *
      * \endcode
      * \par
@@ -527,12 +528,12 @@ public:
      * reduction within a block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -543,7 +544,7 @@ public:
      *
      *     // Return the warp-wide reductions to each lane0
      *     int aggregate = WarpReduce(temp_storage).HeadSegmentedReduce(
-     *         thread_data, head_flag, cub::Max());
+     *         thread_data, head_flag, hipcub::Max());
      *
      * \endcode
      * \par
@@ -578,12 +579,12 @@ public:
      * reduction within a block of 32 threads (one warp).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpReduce for type int
-     *     typedef cub::WarpReduce<int> WarpReduce;
+     *     typedef hipcub::WarpReduce<int> WarpReduce;
      *
      *     // Allocate WarpReduce shared memory for one warp
      *     __shared__ typename WarpReduce::TempStorage temp_storage;
@@ -594,7 +595,7 @@ public:
      *
      *     // Return the warp-wide reductions to each lane0
      *     int aggregate = WarpReduce(temp_storage).TailSegmentedReduce(
-     *         thread_data, tail_flag, cub::Max());
+     *         thread_data, tail_flag, hipcub::Max());
      *
      * \endcode
      * \par

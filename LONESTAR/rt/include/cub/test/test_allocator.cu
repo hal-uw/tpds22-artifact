@@ -38,7 +38,7 @@
 #include <cub/util_allocator.cuh>
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -69,8 +69,8 @@ int main(int argc, char** argv)
 
     // Get number of GPUs and current GPU
     int num_gpus, initial_gpu;
-    if (CubDebug(cudaGetDeviceCount(&num_gpus))) exit(1);
-    if (CubDebug(cudaGetDevice(&initial_gpu))) exit(1);
+    if (CubDebug(hipGetDeviceCount(&num_gpus))) exit(1);
+    if (CubDebug(hipGetDevice(&initial_gpu))) exit(1);
 
     // Create default allocator (caches up to 6MB in device allocations per GPU)
     CachingDeviceAllocator allocator;

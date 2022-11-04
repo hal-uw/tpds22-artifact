@@ -5,10 +5,10 @@ HIP_PATH ?= $(ROCM_PATH)/hip
 
 CC := $(HIP_PATH)/bin/hipcc
 
-INCLUDE := $(ROCM_PATH)/include -Iinclude
+INCLUDE := $(ROCM_PATH)/include -I../../../rt/include -I../../../rt/include/mgpu/include -Icub
 LIB := $(ROCM_PATH)/lib -lhiprand -lrocrand
 
-SRC = skel.hip.cc
+SRC = ../../../skelapp/skel.cu
 
 EXE_GSRB = scan_gsrb
 EXE_GCPUSRB = scan_gcpusrb

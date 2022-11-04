@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockHistogram class provides [<em>collective</em>](index.html#sec0) methods for constructing block-wide histograms from data samples partitioned across a CUDA thread block.
+ * The hipcub::BlockHistogram class provides [<em>collective</em>](index.html#sec0) methods for constructing block-wide histograms from data samples partitioned across a CUDA thread block.
  */
 
 #pragma once
@@ -96,7 +97,7 @@ enum BlockHistogramAlgorithm
  * \tparam BLOCK_DIM_X          The thread block length in threads along the X dimension
  * \tparam ITEMS_PER_THREAD     The number of items per thread
  * \tparam BINS                 The number bins within the histogram
- * \tparam ALGORITHM            <b>[optional]</b> cub::BlockHistogramAlgorithm enumerator specifying the underlying algorithm to use (default: cub::BLOCK_HISTO_SORT)
+ * \tparam ALGORITHM            <b>[optional]</b> hipcub::BlockHistogramAlgorithm enumerator specifying the underlying algorithm to use (default: hipcub::BLOCK_HISTO_SORT)
  * \tparam BLOCK_DIM_Y          <b>[optional]</b> The thread block length in threads along the Y dimension (default: 1)
  * \tparam BLOCK_DIM_Z          <b>[optional]</b> The thread block length in threads along the Z dimension (default: 1)
  * \tparam PTX_ARCH             <b>[optional]</b> \ptxversion
@@ -105,8 +106,8 @@ enum BlockHistogramAlgorithm
  * - A <a href="http://en.wikipedia.org/wiki/Histogram"><em>histogram</em></a>
  *   counts the number of observations that fall into each of the disjoint categories (known as <em>bins</em>).
  * - BlockHistogram can be optionally specialized to use different algorithms:
- *   -# <b>cub::BLOCK_HISTO_SORT</b>.  Sorting followed by differentiation. [More...](\ref cub::BlockHistogramAlgorithm)
- *   -# <b>cub::BLOCK_HISTO_ATOMIC</b>.  Use atomic addition to update byte counts directly. [More...](\ref cub::BlockHistogramAlgorithm)
+ *   -# <b>hipcub::BLOCK_HISTO_SORT</b>.  Sorting followed by differentiation. [More...](\ref hipcub::BlockHistogramAlgorithm)
+ *   -# <b>hipcub::BLOCK_HISTO_ATOMIC</b>.  Use atomic addition to update byte counts directly. [More...](\ref hipcub::BlockHistogramAlgorithm)
  *
  * \par Performance Considerations
  * - \granularity
@@ -118,12 +119,12 @@ enum BlockHistogramAlgorithm
  * are partitioned across 128 threads where each thread owns 4 samples.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_histogram.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_histogram.cuh>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize a 256-bin BlockHistogram type for a 1D block of 128 threads having 4 character samples each
- *     typedef cub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
+ *     typedef hipcub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
  *
  *     // Allocate shared memory for BlockHistogram
  *     __shared__ typename BlockHistogram::TempStorage temp_storage;
@@ -142,7 +143,7 @@ enum BlockHistogramAlgorithm
  *
  * \par Performance and Usage Considerations
  * - The histogram output can be constructed in shared or global memory
- * - See cub::BlockHistogramAlgorithm for performance details regarding algorithmic alternatives
+ * - See hipcub::BlockHistogramAlgorithm for performance details regarding algorithmic alternatives
  *
  */
 template <
@@ -260,12 +261,12 @@ public:
      * where each thread owns 4 samples.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_histogram.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_histogram.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize a 256-bin BlockHistogram type for a 1D block of 128 threads having 4 character samples each
-     *     typedef cub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
+     *     typedef hipcub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
      *
      *     // Allocate shared memory for BlockHistogram
      *     __shared__ typename BlockHistogram::TempStorage temp_storage;
@@ -318,12 +319,12 @@ public:
      * are partitioned across 128 threads where each thread owns 4 samples.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_histogram.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_histogram.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize a 256-bin BlockHistogram type for a 1D block of 128 threads having 4 character samples each
-     *     typedef cub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
+     *     typedef hipcub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
      *
      *     // Allocate shared memory for BlockHistogram
      *     __shared__ typename BlockHistogram::TempStorage temp_storage;
@@ -372,12 +373,12 @@ public:
      * where each thread owns 4 samples.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_histogram.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_histogram.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize a 256-bin BlockHistogram type for a 1D block of 128 threads having 4 character samples each
-     *     typedef cub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
+     *     typedef hipcub::BlockHistogram<unsigned char, 128, 4, 256> BlockHistogram;
      *
      *     // Allocate shared memory for BlockHistogram
      *     __shared__ typename BlockHistogram::TempStorage temp_storage;

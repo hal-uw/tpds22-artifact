@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * cub::BlockRangeHistogram implements a stateful abstraction of CUDA thread blocks for participating in device-wide selection across a range of tiles.
+ * hipcub::BlockRangeHistogram implements a stateful abstraction of CUDA thread blocks for participating in device-wide selection across a range of tiles.
  */
 
 #pragma once

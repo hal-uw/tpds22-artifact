@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockExchange class provides [<em>collective</em>](index.html#sec0) methods for rearranging data partitioned across a CUDA thread block.
+ * The hipcub::BlockExchange class provides [<em>collective</em>](index.html#sec0) methods for rearranging data partitioned across a CUDA thread block.
  */
 
 #pragma once
@@ -77,19 +78,19 @@ namespace cub {
  * of 512 integer items partitioned across 128 threads where each thread owns 4 items.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_exchange.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_exchange.cuh>
  *
  * __global__ void ExampleKernel(int *d_data, ...)
  * {
  *     // Specialize BlockExchange for a 1D block of 128 threads owning 4 integer items each
- *     typedef cub::BlockExchange<int, 128, 4> BlockExchange;
+ *     typedef hipcub::BlockExchange<int, 128, 4> BlockExchange;
  *
  *     // Allocate shared memory for BlockExchange
  *     __shared__ typename BlockExchange::TempStorage temp_storage;
  *
  *     // Load a tile of data striped across threads
  *     int thread_data[4];
- *     cub::LoadDirectStriped<128>(threadIdx.x, d_data, thread_data);
+ *     hipcub::LoadDirectStriped<128>(threadIdx.x, d_data, thread_data);
  *
  *     // Collectively exchange data into a blocked arrangement across threads
  *     BlockExchange(temp_storage).StripedToBlocked(thread_data);
@@ -699,19 +700,19 @@ public:
      * of 512 integer items partitioned across 128 threads where each thread owns 4 items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_exchange.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_exchange.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, ...)
      * {
      *     // Specialize BlockExchange for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockExchange<int, 128, 4> BlockExchange;
+     *     typedef hipcub::BlockExchange<int, 128, 4> BlockExchange;
      *
      *     // Allocate shared memory for BlockExchange
      *     __shared__ typename BlockExchange::TempStorage temp_storage;
      *
      *     // Load a tile of ordered data into a striped arrangement across block threads
      *     int thread_data[4];
-     *     cub::LoadDirectStriped<128>(threadIdx.x, d_data, thread_data);
+     *     hipcub::LoadDirectStriped<128>(threadIdx.x, d_data, thread_data);
      *
      *     // Collectively exchange data into a blocked arrangement across threads
      *     BlockExchange(temp_storage).StripedToBlocked(thread_data);
@@ -741,12 +742,12 @@ public:
      * of 512 integer items partitioned across 128 threads where each thread owns 4 items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_exchange.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_exchange.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, ...)
      * {
      *     // Specialize BlockExchange for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockExchange<int, 128, 4> BlockExchange;
+     *     typedef hipcub::BlockExchange<int, 128, 4> BlockExchange;
      *
      *     // Allocate shared memory for BlockExchange
      *     __shared__ typename BlockExchange::TempStorage temp_storage;
@@ -759,7 +760,7 @@ public:
      *     BlockExchange(temp_storage).BlockedToStriped(thread_data);
      *
      *     // Store data striped across block threads into an ordered tile
-     *     cub::StoreDirectStriped<STORE_DEFAULT, 128>(threadIdx.x, d_data, thread_data);
+     *     hipcub::StoreDirectStriped<STORE_DEFAULT, 128>(threadIdx.x, d_data, thread_data);
      *
      * \endcode
      * \par
@@ -788,19 +789,19 @@ public:
      * of 512 integer items partitioned across 128 threads where each thread owns 4 items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_exchange.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_exchange.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, ...)
      * {
      *     // Specialize BlockExchange for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockExchange<int, 128, 4> BlockExchange;
+     *     typedef hipcub::BlockExchange<int, 128, 4> BlockExchange;
      *
      *     // Allocate shared memory for BlockExchange
      *     __shared__ typename BlockExchange::TempStorage temp_storage;
      *
      *     // Load a tile of ordered data into a warp-striped arrangement across warp threads
      *     int thread_data[4];
-     *     cub::LoadSWarptriped<LOAD_DEFAULT>(threadIdx.x, d_data, thread_data);
+     *     hipcub::LoadSWarptriped<LOAD_DEFAULT>(threadIdx.x, d_data, thread_data);
      *
      *     // Collectively exchange data into a blocked arrangement across threads
      *     BlockExchange(temp_storage).WarpStripedToBlocked(thread_data);
@@ -832,12 +833,12 @@ public:
      * of 512 integer items partitioned across 128 threads where each thread owns 4 items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_exchange.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_exchange.cuh>
      *
      * __global__ void ExampleKernel(int *d_data, ...)
      * {
      *     // Specialize BlockExchange for a 1D block of 128 threads owning 4 integer items each
-     *     typedef cub::BlockExchange<int, 128, 4> BlockExchange;
+     *     typedef hipcub::BlockExchange<int, 128, 4> BlockExchange;
      *
      *     // Allocate shared memory for BlockExchange
      *     __shared__ typename BlockExchange::TempStorage temp_storage;
@@ -850,7 +851,7 @@ public:
      *     BlockExchange(temp_storage).BlockedToWarpStriped(thread_data);
      *
      *     // Store data striped across warp threads into an ordered tile
-     *     cub::StoreDirectStriped<STORE_DEFAULT, 128>(threadIdx.x, d_data, thread_data);
+     *     hipcub::StoreDirectStriped<STORE_DEFAULT, 128>(threadIdx.x, d_data, thread_data);
      *
      * \endcode
      * \par

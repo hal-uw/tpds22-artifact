@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRangeHistogramSort implements a stateful abstraction of CUDA thread blocks for histogramming multiple tiles as part of device-wide histogram using local sorting
+ * hipcub::BlockRangeHistogramSort implements a stateful abstraction of CUDA thread blocks for histogramming multiple tiles as part of device-wide histogram using local sorting
  */
 
 #pragma once

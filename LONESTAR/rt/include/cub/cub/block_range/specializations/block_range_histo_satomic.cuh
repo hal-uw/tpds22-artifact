@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRangeHistogramSharedAtomic implements a stateful abstraction of CUDA thread blocks for histogramming multiple tiles as part of device-wide histogram using shared atomics
+ * hipcub::BlockRangeHistogramSharedAtomic implements a stateful abstraction of CUDA thread blocks for histogramming multiple tiles as part of device-wide histogram using shared atomics
  */
 
 #pragma once

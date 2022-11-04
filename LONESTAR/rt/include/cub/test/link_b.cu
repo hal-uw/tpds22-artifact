@@ -1,11 +1,11 @@
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 void b()
 {
     printf("b() called\n");
 
-    cub::DoubleBuffer<unsigned int>     d_keys;
-    cub::DoubleBuffer<cub::NullType>    d_values;
+    hipcub::DoubleBuffer<unsigned int>     d_keys;
+    hipcub::DoubleBuffer<hipcub::NullType>    d_values;
     size_t                              temp_storage_bytes = 0;
-    cub::DeviceRadixSort::SortPairs(NULL, temp_storage_bytes, d_keys, d_values, 1024);
+    hipcub::DeviceRadixSort::SortPairs(NULL, temp_storage_bytes, d_keys, d_values, 1024);
 }

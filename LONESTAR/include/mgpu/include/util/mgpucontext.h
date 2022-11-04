@@ -3,19 +3,19 @@
 #include "util/util.h"
 #include "util/format.h"
 #include "mgpualloc.h"
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 namespace mgpu {
 
 
 #ifdef _DEBUG
-#define MGPU_SYNC_CHECK(s) {												\
-	cudaError_t error = cudaDeviceSynchronize();							\
-	if(cudaSuccess != error) {												\
-		printf("CUDA ERROR %d %s\n%s:%d.\n%s\n",							\
-			error, cudaGetErrorString(error), __FILE__, __LINE__, s);		\
-		exit(0);															\
-	}																		\
+#define MGPU_SYNC_CHECK(s) {									\
+	hipError_t error = hipDeviceSynchronize();						\
+	if(hipSuccess != error) {								\
+		printf("HIP ERROR %d %s\n%s:%d.\n%s\n",						\
+			error, hipGetErrorString(error), __FILE__, __LINE__, s);		\
+		exit(0);									\
+	}											\
 }
 #else
 #define MGPU_SYNC_CHECK(s)
@@ -23,11 +23,11 @@ namespace mgpu {
 
 template<typename T>
 void copyDtoH(T* dest, const T* source, int count) {
-	cudaMemcpy(dest, source, sizeof(T) * count, cudaMemcpyDeviceToHost);
+	hipMemcpy(dest, source, sizeof(T) * count, hipMemcpyDeviceToHost);
 }
 template<typename T>
-void copyDtoD(T* dest, const T* source, int count, cudaStream_t stream = 0) {
-	cudaMemcpyAsync(dest, source, sizeof(T) * count, cudaMemcpyDeviceToDevice,
+void copyDtoD(T* dest, const T* source, int count, hipStream_t stream = 0) {
+	hipMemcpyAsync(dest, source, sizeof(T) * count, hipMemcpyDeviceToDevice,
 		stream);
 }
 template<typename T>
@@ -39,7 +39,7 @@ void copyDtoH(std::vector<T>& dest, const T* source, int count) {
 
 template<typename T>
 void copyHtoD(T* dest, const T* source, int count) {
-	cudaMemcpy(dest, source, sizeof(T) * count, cudaMemcpyHostToDevice);
+	hipMemcpy(dest, source, sizeof(T) * count, hipMemcpyHostToDevice);
 }
 template<typename T>
 void copyHtoD(T* dest, const std::vector<T>& source) {
@@ -56,14 +56,14 @@ typedef intrusive_ptr<CudaAlloc> AllocPtr;
 
 class CudaException : public std::exception {
 public:
-	cudaError_t error;
+	hipError_t error;
 
 	CudaException() throw() { }
-	CudaException(cudaError_t e) throw() : error(e) { }
+	CudaException(hipError_t e) throw() : error(e) { }
 	CudaException(const CudaException& e) throw() : error(e.error) { }
 
 	virtual const char* what() const throw() {
-		return "CUDA runtime error";
+		return "HIP runtime error";
 	}
 };
 
@@ -75,20 +75,20 @@ public:
 class CudaEvent : public noncopyable {
 public:
 	CudaEvent() { 
-		cudaEventCreate(&_event);
+		hipEventCreate(&_event);
 	}
 	explicit CudaEvent(int flags) {
-		cudaEventCreateWithFlags(&_event, flags);
+		hipEventCreateWithFlags(&_event, flags);
 	}
 	~CudaEvent() {
-		cudaEventDestroy(_event);
+		hipEventDestroy(_event);
 	}
-	operator cudaEvent_t() { return _event; }
+	operator hipEvent_t() { return _event; }
 	void Swap(CudaEvent& rhs) {
 		std::swap(_event, rhs._event);
 	}
 private:
-	cudaEvent_t _event;
+	hipEvent_t _event;
 };
 
 class CudaTimer : noncopyable {
@@ -112,7 +112,7 @@ public:
 	static CudaDevice& Selected();
 
 	// Device properties.
-	const cudaDeviceProp& Prop() const { return _prop; }
+	const hipDeviceProp_t & Prop() const { return _prop; }
 	int Ordinal() const { return _ordinal; }
 	int NumSMs() const { return _prop.multiProcessorCount; }
 	int ArchVersion() const { return 100 * _prop.major + 10 * _prop.minor; }
@@ -129,7 +129,7 @@ private:
 	CudaDevice() { }		// hide the destructor.
 	int _ordinal;
 	int _ptxVersion;
-	cudaDeviceProp _prop;
+	hipDeviceProp_t _prop;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,20 +155,20 @@ public:
 	size_t Size() const { return _size; }
 
 	// Copy from this to the argument array.
-	cudaError_t ToDevice(T* data, size_t count) const;
-	cudaError_t ToDevice(size_t srcOffest, size_t bytes, void* data) const;
-	cudaError_t ToHost(T* data, size_t count) const;
-	cudaError_t ToHost(std::vector<T>& data) const;
-	cudaError_t ToHost(std::vector<T>& data, size_t count) const;
-	cudaError_t ToHost(size_t srcOffset, size_t bytes, void* data) const;
+	hipError_t ToDevice(T* data, size_t count) const;
+	hipError_t ToDevice(size_t srcOffest, size_t bytes, void* data) const;
+	hipError_t ToHost(T* data, size_t count) const;
+	hipError_t ToHost(std::vector<T>& data) const;
+	hipError_t ToHost(std::vector<T>& data, size_t count) const;
+	hipError_t ToHost(size_t srcOffset, size_t bytes, void* data) const;
 
 	// Copy from the argument array to this.
-	cudaError_t FromDevice(const T* data, size_t count);
-	cudaError_t FromDevice(size_t dstOffset, size_t bytes, const void* data);
-	cudaError_t FromHost(const std::vector<T>& data);
-	cudaError_t FromHost(const std::vector<T>& data, size_t count);
-	cudaError_t FromHost(const T* data, size_t count);
-	cudaError_t FromHost(size_t destOffset, size_t bytes, const void* data);
+	hipError_t FromDevice(const T* data, size_t count);
+	hipError_t FromDevice(size_t dstOffset, size_t bytes, const void* data);
+	hipError_t FromHost(const std::vector<T>& data);
+	hipError_t FromHost(const std::vector<T>& data, size_t count);
+	hipError_t FromHost(const T* data, size_t count);
+	hipError_t FromHost(size_t destOffset, size_t bytes, const void* data);
 
 private:
 	friend class CudaContext;
@@ -248,8 +248,8 @@ ContextPtr CreateCudaDeviceStream(int argc, char** argv,
 	bool printInfo = false);
 
 // Create a context and attach to an existing stream.
-ContextPtr CreateCudaDeviceAttachStream(cudaStream_t stream);
-ContextPtr CreateCudaDeviceAttachStream(int ordinal, cudaStream_t stream);
+ContextPtr CreateCudaDeviceAttachStream(hipStream_t stream);
+ContextPtr CreateCudaDeviceAttachStream(int ordinal, hipStream_t stream);
 
 struct ContextGroup;
 
@@ -259,20 +259,20 @@ class CudaContext : public CudaMemSupport {
 	friend ContextPtr CreateCudaDevice(int ordinal);
 	friend ContextPtr CreateCudaDeviceStream(int ordinal);
 	friend ContextPtr CreateCudaDeviceAttachStream(int ordinal, 
-		cudaStream_t stream);
+		hipStream_t stream);
 public:
 	static CudaContext& StandardContext(int ordinal = -1);
 
 	// 4KB of page-locked memory per context.
 	int* PageLocked() { return _pageLocked; }
-	cudaStream_t AuxStream() const { return _auxStream; }
+	hipStream_t AuxStream() const { return _auxStream; }
 
 	int NumSMs() { return Device().NumSMs(); }
 	int ArchVersion() { return Device().ArchVersion(); }
 	int PTXVersion() { return Device().PTXVersion(); }
 	std::string DeviceString() { return Device().DeviceString(); }
 
-	cudaStream_t Stream() const { return _stream; }
+	hipStream_t Stream() const { return _stream; }
 
 	// Set this device as the active device on the thread.
 	void SetActive() { Device().SetActive(); }
@@ -301,8 +301,8 @@ private:
 	AllocPtr CreateDefaultAlloc(CudaDevice& device);
 
 	bool _ownStream;
-	cudaStream_t _stream;
-	cudaStream_t _auxStream;
+	hipStream_t _stream;
+	hipStream_t _auxStream;
 	CudaEvent _event;
 	CudaTimer _timer;
 	bool _noRefCount;
@@ -313,15 +313,15 @@ private:
 // CudaDeviceMem method implementations
 
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToDevice(T* data, size_t count) const {
+hipError_t CudaDeviceMem<T>::ToDevice(T* data, size_t count) const {
 	return ToDevice(0, sizeof(T) * count, data);
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToDevice(size_t srcOffset, size_t bytes, 
+hipError_t CudaDeviceMem<T>::ToDevice(size_t srcOffset, size_t bytes, 
 	void* data) const {
-	cudaError_t error = cudaMemcpy(data, (char*)_p + srcOffset, bytes, 
-		cudaMemcpyDeviceToDevice);
-	if(cudaSuccess != error) {
+	hipError_t error = hipMemcpy(data, (char*)_p + srcOffset, bytes, 
+		hipMemcpyDeviceToDevice);
+	if(hipSuccess != error) {
 		printf("CudaDeviceMem::ToDevice copy error %d\n", error);
 		exit(0);
 	}
@@ -329,27 +329,27 @@ cudaError_t CudaDeviceMem<T>::ToDevice(size_t srcOffset, size_t bytes,
 }
 
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToHost(T* data, size_t count) const {
+hipError_t CudaDeviceMem<T>::ToHost(T* data, size_t count) const {
 	return ToHost(0, sizeof(T) * count, data);
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToHost(std::vector<T>& data, size_t count) const {
+hipError_t CudaDeviceMem<T>::ToHost(std::vector<T>& data, size_t count) const {
 	data.resize(count);
-	cudaError_t error = cudaSuccess;
+	hipError_t error = hipSuccess;
 	if(_size) error = ToHost(&data[0], count);
 	return error;
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToHost(std::vector<T>& data) const {
+hipError_t CudaDeviceMem<T>::ToHost(std::vector<T>& data) const {
 	return ToHost(data, _size);
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::ToHost(size_t srcOffset, size_t bytes, 
+hipError_t CudaDeviceMem<T>::ToHost(size_t srcOffset, size_t bytes, 
 	void* data) const {
 
-	cudaError_t error = cudaMemcpy(data, (char*)_p + srcOffset, bytes,
-		cudaMemcpyDeviceToHost);
-	if(cudaSuccess != error) {
+	hipError_t error = hipMemcpy(data, (char*)_p + srcOffset, bytes,
+		hipMemcpyDeviceToHost);
+	if(hipSuccess != error) {
 		printf("CudaDeviceMem::ToHost copy error %d\n", error);
 		exit(0);
 	}
@@ -357,39 +357,39 @@ cudaError_t CudaDeviceMem<T>::ToHost(size_t srcOffset, size_t bytes,
 }
 
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromDevice(const T* data, size_t count) {
+hipError_t CudaDeviceMem<T>::FromDevice(const T* data, size_t count) {
 	return FromDevice(0, sizeof(T) * count, data);
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromDevice(size_t dstOffset, size_t bytes,
+hipError_t CudaDeviceMem<T>::FromDevice(size_t dstOffset, size_t bytes,
 	const void* data) {
 	if(dstOffset + bytes > sizeof(T) * _size)
-		return cudaErrorInvalidValue;
-	cudaMemcpy(_p + dstOffset, data, bytes, cudaMemcpyDeviceToDevice);
-	return cudaSuccess;
+		return hipErrorInvalidValue;
+	hipMemcpy(_p + dstOffset, data, bytes, hipMemcpyDeviceToDevice);
+	return hipSuccess;
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromHost(const std::vector<T>& data,
+hipError_t CudaDeviceMem<T>::FromHost(const std::vector<T>& data,
 	size_t count) {
-	cudaError_t error = cudaSuccess;
+	hipError_t error = hipSuccess;
 	if(data.size()) error = FromHost(&data[0], count);
 	return error;
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromHost(const std::vector<T>& data) {
+hipError_t CudaDeviceMem<T>::FromHost(const std::vector<T>& data) {
 	return FromHost(data, data.size());
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromHost(const T* data, size_t count) {
+hipError_t CudaDeviceMem<T>::FromHost(const T* data, size_t count) {
 	return FromHost(0, sizeof(T) * count, data);
 }
 template<typename T>
-cudaError_t CudaDeviceMem<T>::FromHost(size_t dstOffset, size_t bytes,
+hipError_t CudaDeviceMem<T>::FromHost(size_t dstOffset, size_t bytes,
 	const void* data) {
 	if(dstOffset + bytes > sizeof(T) * _size)
-		return cudaErrorInvalidValue;
-	cudaMemcpy(_p + dstOffset, data, bytes, cudaMemcpyHostToDevice);
-	return cudaSuccess;
+		return hipErrorInvalidValue;
+	hipMemcpy(_p + dstOffset, data, bytes, hipMemcpyHostToDevice);
+	return hipSuccess;
 }
 template<typename T>
 CudaDeviceMem<T>::~CudaDeviceMem() {
@@ -403,15 +403,15 @@ template<typename T>
 MGPU_MEM(T) CudaMemSupport::Malloc(size_t count) {
 	MGPU_MEM(T) mem(new CudaDeviceMem<T>(_alloc.get()));
 	mem->_size = count;
-	cudaError_t error = _alloc->Malloc(sizeof(T) * count, (void**)&mem->_p);
-	if(cudaSuccess != error) {
-		printf("cudaMalloc error %d\n", error);		
+	hipError_t error = _alloc->Malloc(sizeof(T) * count, (void**)&mem->_p);
+	if(hipSuccess != error) {
+		printf("hipMalloc error %d\n", error);		
 		exit(0);
-		throw CudaException(cudaErrorMemoryAllocation);
+		throw CudaException(hipErrorMemoryAllocation);
 	}
 #ifdef DEBUG
 	// Initialize the memory to -1 in debug mode.
-//	cudaMemset(mem->get(), -1, count);
+//	hipMemset(mem->get(), -1, count);
 #endif
 
 	return mem;

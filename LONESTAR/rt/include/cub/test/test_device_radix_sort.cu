@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -45,7 +46,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -66,12 +67,12 @@ CachingDeviceAllocator  g_allocator(true);
  */
 template <typename Key, typename Value>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<false>     is_descending,
     Int2Type<CUB>       dispatch_to,
     int                 *d_selector,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -80,7 +81,7 @@ cudaError_t Dispatch(
     int                 num_items,
     int                 begin_bit,
     int                 end_bit,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     return DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items, begin_bit, end_bit, stream, debug_synchronous);
@@ -92,12 +93,12 @@ cudaError_t Dispatch(
  */
 template <typename Key, typename Value>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<true>      is_descending,
     Int2Type<CUB>       dispatch_to,
     int                 *d_selector,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -106,7 +107,7 @@ cudaError_t Dispatch(
     int                 num_items,
     int                 begin_bit,
     int                 end_bit,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     return DeviceRadixSort::SortPairsDescending(d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items, begin_bit, end_bit, stream, debug_synchronous);
@@ -117,12 +118,12 @@ cudaError_t Dispatch(
  * Dispatch keys-only to Thrust sorting entrypoint
  */
 template <int DESCENDING, typename Key>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DESCENDING>    is_descending,
     Int2Type<THRUST>        dispatch_to,
     int                     *d_selector,
     size_t                  *d_temp_storage_bytes,
-    cudaError_t             *d_cdp_error,
+    hipError_t             *d_cdp_error,
     void                    *d_temp_storage,
     size_t                  &temp_storage_bytes,
     DoubleBuffer<Key>       &d_keys,
@@ -130,7 +131,7 @@ cudaError_t Dispatch(
     int                     num_items,
     int                     begin_bit,
     int                     end_bit,
-    cudaStream_t            stream,
+    hipStream_t            stream,
     bool                    debug_synchronous)
 {
 
@@ -147,7 +148,7 @@ cudaError_t Dispatch(
         if (DESCENDING) thrust::reverse(d_keys_wrapper, d_keys_wrapper + num_items);
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -155,12 +156,12 @@ cudaError_t Dispatch(
  * Dispatch key-value pairs to Thrust sorting entrypoint
  */
 template <int DESCENDING, typename Key, typename Value>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DESCENDING>    is_descending,
     Int2Type<THRUST>        dispatch_to,
     int                     *d_selector,
     size_t                  *d_temp_storage_bytes,
-    cudaError_t             *d_cdp_error,
+    hipError_t             *d_cdp_error,
     void                    *d_temp_storage,
     size_t                  &temp_storage_bytes,
     DoubleBuffer<Key>       &d_keys,
@@ -168,7 +169,7 @@ cudaError_t Dispatch(
     int                     num_items,
     int                     begin_bit,
     int                     end_bit,
-    cudaStream_t            stream,
+    hipStream_t            stream,
     bool                    debug_synchronous)
 {
 
@@ -194,7 +195,7 @@ cudaError_t Dispatch(
         }
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -210,7 +211,7 @@ __global__ void CnpDispatchKernel(
     Int2Type<DESCENDING>    is_descending,
     int                     *d_selector,
     size_t                  *d_temp_storage_bytes,
-    cudaError_t             *d_cdp_error,
+    hipError_t             *d_cdp_error,
 
     void                    *d_temp_storage,
     size_t                  temp_storage_bytes,
@@ -222,7 +223,7 @@ __global__ void CnpDispatchKernel(
     bool                    debug_synchronous)
 {
 #ifndef CUB_CDP
-    *d_cdp_error = cudaErrorNotSupported;
+    *d_cdp_error = hipErrorNotSupported;
 #else
     *d_cdp_error            = Dispatch(is_descending, Int2Type<CUB>(), d_selector, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items, begin_bit, end_bit, 0, debug_synchronous);
     *d_temp_storage_bytes   = temp_storage_bytes;
@@ -235,12 +236,12 @@ __global__ void CnpDispatchKernel(
  * Dispatch to CDP kernel
  */
 template <int DESCENDING, typename Key, typename Value>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DESCENDING>    is_descending,
     Int2Type<CDP>           dispatch_to,
     int                     *d_selector,
     size_t                  *d_temp_storage_bytes,
-    cudaError_t             *d_cdp_error,
+    hipError_t             *d_cdp_error,
 
     void                    *d_temp_storage,
     size_t                  &temp_storage_bytes,
@@ -249,22 +250,22 @@ cudaError_t Dispatch(
     int                     num_items,
     int                     begin_bit,
     int                     end_bit,
-    cudaStream_t            stream,
+    hipStream_t            stream,
     bool                    debug_synchronous)
 {
     // Invoke kernel to invoke device-side dispatch
-    CnpDispatchKernel<<<1,1>>>(is_descending, d_selector, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items, begin_bit, end_bit, debug_synchronous);
+    hipLaunchKernelGGL(CnpDispatchKernel, dim3(1), dim3(1), 0, 0, is_descending, d_selector, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_keys, d_values, num_items, begin_bit, end_bit, debug_synchronous);
 
     // Copy out selector
-    CubDebugExit(cudaMemcpy(&d_keys.selector, d_selector, sizeof(int) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&d_keys.selector, d_selector, sizeof(int) * 1, hipMemcpyDeviceToHost));
     d_values.selector = d_keys.selector;
 
     // Copy out temp_storage_bytes
-    CubDebugExit(cudaMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, hipMemcpyDeviceToHost));
 
     // Copy out error
-    cudaError_t retval;
-    CubDebugExit(cudaMemcpy(&retval, d_cdp_error, sizeof(cudaError_t) * 1, cudaMemcpyDeviceToHost));
+    hipError_t retval;
+    CubDebugExit(hipMemcpy(&retval, d_cdp_error, sizeof(hipError_t) * 1, hipMemcpyDeviceToHost));
     return retval;
 }
 
@@ -419,7 +420,7 @@ void Test(
 {
     const bool KEYS_ONLY = Equals<Value, NullType>::VALUE;
 
-    printf("%s %s cub::DeviceRadixSort %d items, %d-byte keys %d-byte values, descending %d, begin_bit %d, end_bit %d\n",
+    printf("%s %s hipcub::DeviceRadixSort %d items, %d-byte keys %d-byte values, descending %d, begin_bit %d, end_bit %d\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (KEYS_ONLY) ? "keys-only" : "key-value",
         num_items, (int) sizeof(Key), (KEYS_ONLY) ? 0 : (int) sizeof(Value),
@@ -438,12 +439,12 @@ void Test(
     DoubleBuffer<Value> d_values;
     int                 *d_selector;
     size_t              *d_temp_storage_bytes;
-    cudaError_t         *d_cdp_error;
+    hipError_t         *d_cdp_error;
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[0], sizeof(Key) * num_items));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_keys.d_buffers[1], sizeof(Key) * num_items));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_selector, sizeof(int) * 1));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_temp_storage_bytes, sizeof(size_t) * 1));
-    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error, sizeof(cudaError_t) * 1));
+    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error, sizeof(hipError_t) * 1));
     if (!KEYS_ONLY)
     {
         CubDebugExit(g_allocator.DeviceAllocate((void**)&d_values.d_buffers[0], sizeof(Value) * num_items));
@@ -457,12 +458,12 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Initialize/clear device arrays
-    CubDebugExit(cudaMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(Key) * num_items, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_keys.d_buffers[d_keys.selector ^ 1], 0, sizeof(Key) * num_items));
+    CubDebugExit(hipMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(Key) * num_items, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_keys.d_buffers[d_keys.selector ^ 1], 0, sizeof(Key) * num_items));
     if (!KEYS_ONLY)
     {
-        CubDebugExit(cudaMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(Value) * num_items, cudaMemcpyHostToDevice));
-        CubDebugExit(cudaMemset(d_values.d_buffers[d_values.selector ^ 1], 0, sizeof(Value) * num_items));
+        CubDebugExit(hipMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(Value) * num_items, hipMemcpyHostToDevice));
+        CubDebugExit(hipMemset(d_values.d_buffers[d_values.selector ^ 1], 0, sizeof(Value) * num_items));
     }
 
     // Run warmup/correctness iteration
@@ -492,12 +493,12 @@ void Test(
     for (int i = 0; i < g_timing_iterations; ++i)
     {
         // Initialize/clear device arrays
-        CubDebugExit(cudaMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(Key) * num_items, cudaMemcpyHostToDevice));
-        CubDebugExit(cudaMemset(d_keys.d_buffers[d_keys.selector ^ 1], 0, sizeof(Key) * num_items));
+        CubDebugExit(hipMemcpy(d_keys.d_buffers[d_keys.selector], h_keys, sizeof(Key) * num_items, hipMemcpyHostToDevice));
+        CubDebugExit(hipMemset(d_keys.d_buffers[d_keys.selector ^ 1], 0, sizeof(Key) * num_items));
         if (!KEYS_ONLY)
         {
-            CubDebugExit(cudaMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(Value) * num_items, cudaMemcpyHostToDevice));
-            CubDebugExit(cudaMemset(d_values.d_buffers[d_values.selector ^ 1], 0, sizeof(Value) * num_items));
+            CubDebugExit(hipMemcpy(d_values.d_buffers[d_values.selector], h_values, sizeof(Value) * num_items, hipMemcpyHostToDevice));
+            CubDebugExit(hipMemset(d_values.d_buffers[d_values.selector ^ 1], 0, sizeof(Value) * num_items));
         }
 
         gpu_timer.Start();

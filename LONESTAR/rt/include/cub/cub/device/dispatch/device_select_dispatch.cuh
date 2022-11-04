@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
@@ -29,7 +30,7 @@
 
 /**
  * \file
- * cub::DeviceSelect provides device-wide, parallel operations for selecting items from sequences of data items residing within global memory.
+ * hipcub::DeviceSelect provides device-wide, parallel operations for selecting items from sequences of data items residing within global memory.
  */
 
 #pragma once
@@ -357,10 +358,10 @@ struct DeviceSelectDispatch
      * specified kernel functions.
      */
     template <
-        typename                    ScanInitKernelPtr,              ///< Function type of cub::ScanInitKernel
-        typename                    SelectRegionKernelPtr>          ///< Function type of cub::SelectRegionKernelPtr
+        typename                    ScanInitKernelPtr,              ///< Function type of hipcub::ScanInitKernel
+        typename                    SelectRegionKernelPtr>          ///< Function type of hipcub::SelectRegionKernelPtr
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                           ///< [in] Pointer to input sequence of data items
@@ -370,27 +371,27 @@ struct DeviceSelectDispatch
         SelectOp                    select_op,                      ///< [in] Selection operator
         EqualityOp                  equality_op,                    ///< [in] Equality operator
         Offset                      num_items,                      ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous,              ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
         int                         ptx_version,                    ///< [in] PTX version of dispatch kernels
-        ScanInitKernelPtr           init_kernel,                    ///< [in] Kernel function pointer to parameterization of cub::ScanInitKernel
-        SelectRegionKernelPtr       select_range_kernel,           ///< [in] Kernel function pointer to parameterization of cub::SelectRegionKernel
+        ScanInitKernelPtr           init_kernel,                    ///< [in] Kernel function pointer to parameterization of hipcub::ScanInitKernel
+        SelectRegionKernelPtr       select_range_kernel,           ///< [in] Kernel function pointer to parameterization of hipcub::SelectRegionKernel
         KernelConfig                select_range_config)           ///< [in] Dispatch parameters that match the policy that \p select_range_kernel was compiled for
     {
 
 #ifndef CUB_RUNTIME_ENABLED
 
         // Kernel launch not supported from this device
-        return CubDebug(cudaErrorNotSupported);
+        return CubDebug(hipErrorNotSupported);
 
 #else
 
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get device ordinal
             int device_ordinal;
-            if (CubDebug(error = cudaGetDevice(&device_ordinal))) break;
+            if (CubDebug(error = hipGetDevice(&device_ordinal))) break;
 
             // Get device SM version
             int sm_version;
@@ -398,7 +399,7 @@ struct DeviceSelectDispatch
 
             // Get SM count
             int sm_count;
-            if (CubDebug(error = cudaDeviceGetAttribute (&sm_count, cudaDevAttrMultiProcessorCount, device_ordinal))) break;
+            if (CubDebug(error = hipDeviceGetAttribute (&sm_count, hipDeviceAttributeMultiprocessorCount, device_ordinal))) break;
 
             // Number of input tiles
             int tile_size = select_range_config.block_threads * select_range_config.items_per_thread;
@@ -415,7 +416,7 @@ struct DeviceSelectDispatch
             if (d_temp_storage == NULL)
             {
                 // Return if the caller is simply requesting the size of the storage allocation
-                return cudaSuccess;
+                return hipSuccess;
             }
 
             // Construct the tile status interface
@@ -427,16 +428,16 @@ struct DeviceSelectDispatch
 
             // Log init_kernel configuration
             int init_grid_size = (num_tiles + INIT_KERNEL_THREADS - 1) / INIT_KERNEL_THREADS;
-            if (debug_synchronous) CubLog("Invoking init_kernel<<<%d, %d, 0, %lld>>>()\n", init_grid_size, INIT_KERNEL_THREADS, (long long) stream);
+            if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(init_kernel, dim3(%d), dim3(%d), 0, %lld)\n", init_grid_size, INIT_KERNEL_THREADS, (long long) stream);
 
             // Invoke init_kernel to initialize tile descriptors and queue descriptors
-            init_kernel<<<init_grid_size, INIT_KERNEL_THREADS, 0, stream>>>(
+            hipLaunchKernelGGL(init_kernel, dim3(init_grid_size), dim3(INIT_KERNEL_THREADS), 0, stream, 
                 queue,
                 tile_status,
                 num_tiles);
 
             // Check for failure to launch
-            if (CubDebug(error = cudaPeekAtLastError())) break;
+            if (CubDebug(error = hipPeekAtLastError())) break;
 
             // Sync the stream if specified to flush runtime errors
             if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -471,11 +472,11 @@ struct DeviceSelectDispatch
             }
 
             // Log select_range_kernel configuration
-            if (debug_synchronous) CubLog("Invoking select_range_kernel<<<{%d,%d,%d}, %d, 0, %lld>>>(), %d items per thread, %d SM occupancy\n",
+            if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(select_range_kernel, dim3({%d,%d,%d}), dim3(%d), 0, %lld), %d items per thread, %d SM occupancy\n",
                 select_grid_size.x, select_grid_size.y, select_grid_size.z, select_range_config.block_threads, (long long) stream, select_range_config.items_per_thread, select_range_sm_occupancy);
 
             // Invoke select_range_kernel
-            select_range_kernel<<<select_grid_size, select_range_config.block_threads, 0, stream>>>(
+            hipLaunchKernelGGL(select_range_kernel, dim3(select_grid_size), dim3(select_range_config.block_threads), 0, stream, 
                 d_in,
                 d_flags,
                 d_out,
@@ -488,7 +489,7 @@ struct DeviceSelectDispatch
                 queue);
 
             // Check for failure to launch
-            if (CubDebug(error = cudaPeekAtLastError())) break;
+            if (CubDebug(error = hipPeekAtLastError())) break;
 
             // Sync the stream if specified to flush runtime errors
             if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -505,7 +506,7 @@ struct DeviceSelectDispatch
      * Internal dispatch routine
      */
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                           ///< [in] Pointer to input sequence of data items
@@ -515,10 +516,10 @@ struct DeviceSelectDispatch
         SelectOp                    select_op,                      ///< [in] Selection operator
         EqualityOp                  equality_op,                    ///< [in] Equality operator
         Offset                      num_items,                      ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream,                         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream,                         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous)              ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get PTX version

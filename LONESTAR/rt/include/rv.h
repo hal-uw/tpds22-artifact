@@ -11,7 +11,7 @@
 */
 
 #pragma once
-#include "cub/cub.cuh"
+#include "hipcub/hipcub.hpp"
 
 class RV {
  public:

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockRadixSort class provides [<em>collective</em>](index.html#sec0) methods for radix sorting of items partitioned across a CUDA thread block.
+ * The hipcub::BlockRadixSort class provides [<em>collective</em>](index.html#sec0) methods for radix sorting of items partitioned across a CUDA thread block.
  */
 
 
@@ -54,11 +55,11 @@ namespace cub {
  * \tparam Key                  Key type
  * \tparam BLOCK_DIM_X          The thread block length in threads along the X dimension
  * \tparam ITEMS_PER_THREAD     The number of items per thread
- * \tparam Value                <b>[optional]</b> Value type (default: cub::NullType, which indicates a keys-only sort)
+ * \tparam Value                <b>[optional]</b> Value type (default: hipcub::NullType, which indicates a keys-only sort)
  * \tparam RADIX_BITS           <b>[optional]</b> The number of radix bits per digit place (default: 4 bits)
  * \tparam MEMOIZE_OUTER_SCAN   <b>[optional]</b> Whether or not to buffer outer raking scan partials to incur fewer shared memory reads at the expense of higher register pressure (default: true for architectures SM35 and newer, false otherwise).
- * \tparam INNER_SCAN_ALGORITHM <b>[optional]</b> The cub::BlockScanAlgorithm algorithm to use (default: cub::BLOCK_SCAN_WARP_SCANS)
- * \tparam SMEM_CONFIG          <b>[optional]</b> Shared memory bank mode (default: \p cudaSharedMemBankSizeFourByte)
+ * \tparam INNER_SCAN_ALGORITHM <b>[optional]</b> The hipcub::BlockScanAlgorithm algorithm to use (default: hipcub::BLOCK_SCAN_WARP_SCANS)
+ * \tparam SMEM_CONFIG          <b>[optional]</b> Shared memory bank mode (default: \p hipSharedMemBankSizeFourByte)
  * \tparam BLOCK_DIM_Y          <b>[optional]</b> The thread block length in threads along the Y dimension (default: 1)
  * \tparam BLOCK_DIM_Z          <b>[optional]</b> The thread block length in threads along the Z dimension (default: 1)
  * \tparam PTX_ARCH             <b>[optional]</b> \ptxversion
@@ -90,12 +91,12 @@ namespace cub {
  * where each thread owns 4 consecutive items.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer items each
- *     typedef cub::BlockRadixSort<int, 128, 4> BlockRadixSort;
+ *     typedef hipcub::BlockRadixSort<int, 128, 4> BlockRadixSort;
  *
  *     // Allocate shared memory for BlockRadixSort
  *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -124,7 +125,7 @@ template <
     int                     RADIX_BITS              = 4,
     bool                    MEMOIZE_OUTER_SCAN      = (CUB_PTX_ARCH >= 350) ? true : false,
     BlockScanAlgorithm      INNER_SCAN_ALGORITHM    = BLOCK_SCAN_WARP_SCANS,
-    cudaSharedMemConfig     SMEM_CONFIG             = cudaSharedMemBankSizeFourByte,
+    hipSharedMemConfig     SMEM_CONFIG             = hipSharedMemBankSizeFourByte,
     int                     BLOCK_DIM_Y             = 1,
     int                     BLOCK_DIM_Z             = 1,
     int                     PTX_ARCH                = CUB_PTX_ARCH>
@@ -447,12 +448,12 @@ public:
      * where each thread owns 4 consecutive keys.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys each
-     *     typedef cub::BlockRadixSort<int, 128, 4> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -500,12 +501,12 @@ public:
      * where each thread owns 4 consecutive pairs.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys and values each
-     *     typedef cub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -548,12 +549,12 @@ public:
      * where each thread owns 4 consecutive keys.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys each
-     *     typedef cub::BlockRadixSort<int, 128, 4> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -601,12 +602,12 @@ public:
      * where each thread owns 4 consecutive pairs.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys and values each
-     *     typedef cub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -657,12 +658,12 @@ public:
      * where each thread owns 4 consecutive keys.  The final partitioning is striped.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys each
-     *     typedef cub::BlockRadixSort<int, 128, 4> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -711,12 +712,12 @@ public:
      * where each thread owns 4 consecutive pairs.  The final partitioning is striped.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys and values each
-     *     typedef cub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -760,12 +761,12 @@ public:
      * where each thread owns 4 consecutive keys.  The final partitioning is striped.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys each
-     *     typedef cub::BlockRadixSort<int, 128, 4> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;
@@ -814,12 +815,12 @@ public:
      * where each thread owns 4 consecutive pairs.  The final partitioning is striped.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_radix_sort.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockRadixSort for a 1D block of 128 threads owning 4 integer keys and values each
-     *     typedef cub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
+     *     typedef hipcub::BlockRadixSort<int, 128, 4, int> BlockRadixSort;
      *
      *     // Allocate shared memory for BlockRadixSort
      *     __shared__ typename BlockRadixSort::TempStorage temp_storage;

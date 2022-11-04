@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::WarpScanShfl provides SHFL-based variants of parallel prefix scan of items partitioned across a CUDA thread warp.
+ * hipcub::WarpScanShfl provides SHFL-based variants of parallel prefix scan of items partitioned across a CUDA thread warp.
  */
 
 #pragma once

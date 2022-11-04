@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRangeSelect implements a stateful abstraction of CUDA thread blocks for participating in device-wide select.
+ * hipcub::BlockRangeSelect implements a stateful abstraction of CUDA thread blocks for participating in device-wide select.
  */
 
 #pragma once

@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::GridEvenShare is a descriptor utility for distributing input among CUDA threadblocks in an "even-share" fashion.  Each threadblock gets roughly the same number of fixed-size work units (grains).
+ * hipcub::GridEvenShare is a descriptor utility for distributing input among CUDA threadblocks in an "even-share" fashion.  Each threadblock gets roughly the same number of fixed-size work units (grains).
  */
 
 

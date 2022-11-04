@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -40,7 +41,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -449,8 +450,8 @@ void TestReduce(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * BLOCK_THREADS));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_out, sizeof(T) * BLOCK_THREADS));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_elapsed, sizeof(clock_t)));
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * BLOCK_THREADS, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_out, 0, sizeof(T) * BLOCK_THREADS));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * BLOCK_THREADS, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_out, 0, sizeof(T) * BLOCK_THREADS));
 
     // Run kernel
     printf("Gen-mode %d, %d warps, %d warp threads, %d valid lanes, %s (%d bytes) elements:\n",
@@ -465,7 +466,7 @@ void TestReduce(
     if (valid_warp_threads == LOGICAL_WARP_THREADS)
     {
         // Run full-warp kernel
-        FullWarpReduceKernel<WARPS, LOGICAL_WARP_THREADS><<<1, BLOCK_THREADS>>>(
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(FullWarpReduceKernel<WARPS, LOGICAL_WARP_THREADS>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
             d_in,
             d_out,
             reduction_op,
@@ -474,7 +475,7 @@ void TestReduce(
     else
     {
         // Run partial-warp kernel
-        PartialWarpReduceKernel<WARPS, LOGICAL_WARP_THREADS><<<1, BLOCK_THREADS>>>(
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(PartialWarpReduceKernel<WARPS, LOGICAL_WARP_THREADS>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
             d_in,
             d_out,
             reduction_op,
@@ -482,8 +483,8 @@ void TestReduce(
             valid_warp_threads);
     }
 
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Copy out and display results
     printf("\tReduction results: ");
@@ -542,10 +543,10 @@ void TestSegmentedReduce(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_head_out, sizeof(T) * BLOCK_THREADS));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_tail_out, sizeof(T) * BLOCK_THREADS));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_elapsed, sizeof(clock_t)));
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * BLOCK_THREADS, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_flags, h_flags, sizeof(int) * BLOCK_THREADS, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_head_out, 0, sizeof(T) * BLOCK_THREADS));
-    CubDebugExit(cudaMemset(d_tail_out, 0, sizeof(T) * BLOCK_THREADS));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * BLOCK_THREADS, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_flags, h_flags, sizeof(int) * BLOCK_THREADS, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_head_out, 0, sizeof(T) * BLOCK_THREADS));
+    CubDebugExit(hipMemset(d_tail_out, 0, sizeof(T) * BLOCK_THREADS));
 
     printf("Gen-mode %d, head flag entropy reduction %d, %d warps, %d warp threads, %s (%d bytes) elements:\n",
         gen_mode,
@@ -557,15 +558,15 @@ void TestSegmentedReduce(
     fflush(stdout);
 
     // Run head-based kernel
-    WarpHeadSegmentedReduceKernel<WARPS, LOGICAL_WARP_THREADS><<<1, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(WarpHeadSegmentedReduceKernel<WARPS, LOGICAL_WARP_THREADS>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
         d_in,
         d_flags,
         d_head_out,
         reduction_op,
         d_elapsed);
 
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Copy out and display results
     printf("\tHead-based segmented reduction results: ");
@@ -576,15 +577,15 @@ void TestSegmentedReduce(
     DisplayDeviceResults(d_elapsed, 1);
 
     // Run tail-based kernel
-    WarpTailSegmentedReduceKernel<WARPS, LOGICAL_WARP_THREADS><<<1, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(WarpTailSegmentedReduceKernel<WARPS, LOGICAL_WARP_THREADS>), dim3(1), dim3(BLOCK_THREADS), 0, 0, 
         d_in,
         d_flags,
         d_tail_out,
         reduction_op,
         d_elapsed);
 
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Copy out and display results
     printf("\tTail-based segmented reduction results: ");

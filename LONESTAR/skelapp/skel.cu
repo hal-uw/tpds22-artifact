@@ -1,6 +1,8 @@
 /* -*- mode: c++ -*- */
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
+#include "kernel_gsrb.h"
+#include "kernel_gcpusrb.h"
 #include <cstdio>
 #include <unistd.h>
 #include <getopt.h>
@@ -52,14 +54,14 @@ int load_graph_and_run_kernel(char *graph_file) {
   g.copy_to_gpu(gg);
 
   int *d;
-  check_cuda(cudaMalloc(&d, sizeof(int) * 1));
-  //check_cuda(cudaFree(d));
+  check_cuda(hipMalloc(&d, sizeof(int) * 1));
+  //check_cuda(hipFree(d));
 
-  //initialize_skel_kernel<<<1,1>>>();
+  //hipLaunchKernelGGL(initialize_skel_kernel, dim3(1), dim3(1), 0, 0);
 
   k.start();
   gg_main(g, gg);
-  check_cuda(cudaDeviceSynchronize());
+  check_cuda(hipDeviceSynchronize());
   k.stop();
   k.print();
 

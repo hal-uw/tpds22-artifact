@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockReduceRakingCommutativeOnly provides raking-based methods of parallel reduction across a CUDA thread block.  Does not support non-commutative reduction operators.
+ * hipcub::BlockReduceRakingCommutativeOnly provides raking-based methods of parallel reduction across a CUDA thread block.  Does not support non-commutative reduction operators.
  */
 
 #pragma once
@@ -148,7 +148,7 @@ struct BlockReduceRakingCommutativeOnly
             {
                 // Raking reduction in grid
                 T *raking_segment = BlockRakingLayout::RakingPtr(temp_storage.raking_grid, linear_tid);
-                partial = ThreadReduce<SEGMENT_LENGTH>(raking_segment, cub::Sum(), partial);
+                partial = ThreadReduce<SEGMENT_LENGTH>(raking_segment, hipcub::Sum(), partial);
 
                 // Warpscan
                 partial = WarpReduce(temp_storage.warp_storage).Sum(partial);

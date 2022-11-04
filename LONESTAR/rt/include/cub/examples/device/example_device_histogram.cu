@@ -49,7 +49,7 @@
 
 #include "../../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 
     int num_samples = num_pixels * CHANNELS;
 
-    printf("cub::DeviceHistogram::MultiChannelSharedAtomic() RGB histograms from %d RGBA pixels (%d %d-byte channel samples)\n",
+    printf("hipcub::DeviceHistogram::MultiChannelSharedAtomic() RGB histograms from %d RGBA pixels (%d %d-byte channel samples)\n",
         num_pixels, num_samples, (int) sizeof(unsigned char));
     fflush(stdout);
 
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_histograms_linear,   sizeof(int) * total_bins));
 
     // Initialize device arrays
-    CubDebugExit(cudaMemcpy(d_samples, h_samples, sizeof(unsigned char) * num_samples, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_samples, h_samples, sizeof(unsigned char) * num_samples, hipMemcpyHostToDevice));
 
     // Structure of channel histograms
     int *d_histograms[ACTIVE_CHANNELS];

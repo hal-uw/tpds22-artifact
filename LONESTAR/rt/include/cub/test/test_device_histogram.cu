@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -46,7 +47,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -73,12 +74,12 @@ enum
  * Dispatch to NPP
  */
 template <int BINS, int CHANNELS, int ACTIVE_CHANNELS, typename InputIterator, typename HistoCounter>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<NPP_HISTO> algorithm,
     Int2Type<false>     use_cdp,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -86,10 +87,10 @@ cudaError_t Dispatch(
     InputIterator       d_sample_itr,
     HistoCounter        *d_histograms[ACTIVE_CHANNELS],
     int                 num_samples,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error       = cudaSuccess;
+    hipError_t error       = hipSuccess;
     int binCount            = BINS;
     int levelCount          = BINS + 1;
 
@@ -135,12 +136,12 @@ cudaError_t Dispatch(
  */
 template <int BINS, int CHANNELS, int ACTIVE_CHANNELS, typename SampleT, typename InputIterator, typename HistoCounter>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DEVICE_HISTO_SORT> algorithm,
     Int2Type<false>     use_cdp,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -148,10 +149,10 @@ cudaError_t Dispatch(
     InputIterator       d_sample_itr,
     HistoCounter        *d_histograms[ACTIVE_CHANNELS],
     int                 num_samples,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceHistogram::MultiChannelSorting<BINS, CHANNELS, ACTIVE_CHANNELS>(d_temp_storage, temp_storage_bytes, d_sample_itr, d_histograms, num_samples, stream, debug_synchronous);
@@ -167,12 +168,12 @@ cudaError_t Dispatch(
  */
 template <int BINS, int CHANNELS, int ACTIVE_CHANNELS, typename SampleT, typename InputIterator, typename HistoCounter>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DEVICE_HISTO_SHARED_ATOMIC> algorithm,
     Int2Type<false>     use_cdp,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -180,10 +181,10 @@ cudaError_t Dispatch(
     InputIterator       d_sample_itr,
     HistoCounter        *d_histograms[ACTIVE_CHANNELS],
     int                 num_samples,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceHistogram::MultiChannelSharedAtomic<BINS, CHANNELS, ACTIVE_CHANNELS>(d_temp_storage, temp_storage_bytes, d_sample_itr, d_histograms, num_samples, stream, debug_synchronous);
@@ -197,12 +198,12 @@ cudaError_t Dispatch(
  */
 template <int BINS, int CHANNELS, int ACTIVE_CHANNELS, typename SampleT, typename InputIterator, typename HistoCounter>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<DEVICE_HISTO_GLOBAL_ATOMIC> algorithm,
     Int2Type<false>     use_cdp,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -210,10 +211,10 @@ cudaError_t Dispatch(
     InputIterator       d_sample_itr,
     HistoCounter        *d_histograms[ACTIVE_CHANNELS],
     int                 num_samples,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceHistogram::MultiChannelGlobalAtomic<BINS, CHANNELS, ACTIVE_CHANNELS>(d_temp_storage, temp_storage_bytes, d_sample_itr, d_histograms, num_samples, stream, debug_synchronous);
@@ -234,7 +235,7 @@ __global__ void CnpDispatchKernel(
     Int2Type<ALGORITHM> algorithm,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              temp_storage_bytes,
@@ -245,7 +246,7 @@ __global__ void CnpDispatchKernel(
     bool                debug_synchronous)
 {
 #ifndef CUB_CDP
-    *d_cdp_error = cudaErrorNotSupported;
+    *d_cdp_error = hipErrorNotSupported;
 #else
     *d_cdp_error = Dispatch<BINS, CHANNELS, ACTIVE_CHANNELS>(algorithm, Int2Type<false>(), timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_samples, d_sample_itr, d_out_histograms.array, num_samples, 0, debug_synchronous);
     *d_temp_storage_bytes = temp_storage_bytes;
@@ -257,12 +258,12 @@ __global__ void CnpDispatchKernel(
  * Dispatch to CDP kernel
  */
 template <int BINS, int CHANNELS, int ACTIVE_CHANNELS, typename SampleT, typename InputIterator, typename HistoCounter, int ALGORITHM>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<ALGORITHM> algorithm,
     Int2Type<true>      use_cdp,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -270,7 +271,7 @@ cudaError_t Dispatch(
     InputIterator       d_sample_itr,
     HistoCounter        *d_histograms[ACTIVE_CHANNELS],
     int                 num_samples,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Setup array wrapper for histogram channel output (because we can't pass static arrays as kernel parameters)
@@ -279,14 +280,14 @@ cudaError_t Dispatch(
         d_histo_wrapper.array[CHANNEL] = d_histograms[CHANNEL];
 
     // Invoke kernel to invoke device-side dispatch
-    CnpDispatchKernel<BINS, CHANNELS, ACTIVE_CHANNELS, InputIterator, HistoCounter, ALGORITHM><<<1,1>>>(algorithm, timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_samples, d_sample_itr, d_histo_wrapper, num_samples, debug_synchronous);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(CnpDispatchKernel<BINS, CHANNELS, ACTIVE_CHANNELS, InputIterator, HistoCounter, ALGORITHM>), dim3(1), dim3(1), 0, 0, algorithm, timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_samples, d_sample_itr, d_histo_wrapper, num_samples, debug_synchronous);
 
     // Copy out temp_storage_bytes
-    CubDebugExit(cudaMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, hipMemcpyDeviceToHost));
 
     // Copy out error
-    cudaError_t retval;
-    CubDebugExit(cudaMemcpy(&retval, d_cdp_error, sizeof(cudaError_t) * 1, cudaMemcpyDeviceToHost));
+    hipError_t retval;
+    CubDebugExit(hipMemcpy(&retval, d_cdp_error, sizeof(hipError_t) * 1, hipMemcpyDeviceToHost));
     return retval;
 }
 
@@ -420,7 +421,7 @@ void Test(
     int cdp_compare     = 0;
     int total_bins      = ACTIVE_CHANNELS * BINS;
 
-    printf("%s cub::DeviceHistogram %s %d %s samples (%dB), %d bins, %d channels, %d active channels, gen-mode %s\n",
+    printf("%s hipcub::DeviceHistogram %s %d %s samples (%dB), %d bins, %d channels, %d active channels, gen-mode %s\n",
         (CDP) ? "CDP device invoked" : "Host-invoked",
         (ALGORITHM == NPP_HISTO) ? "NPP" : (ALGORITHM == DEVICE_HISTO_SHARED_ATOMIC) ? "satomic" : (ALGORITHM == DEVICE_HISTO_GLOBAL_ATOMIC) ? "gatomic" : "sort",
         num_samples,
@@ -447,13 +448,13 @@ void Test(
 
     // Allocate CDP device arrays
     size_t          *d_temp_storage_bytes = NULL;
-    cudaError_t     *d_cdp_error = NULL;
+    hipError_t     *d_cdp_error = NULL;
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_temp_storage_bytes,  sizeof(size_t) * 1));
-    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(cudaError_t) * 1));
+    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(hipError_t) * 1));
 
     // Initialize/clear device arrays
-    CubDebugExit(cudaMemcpy(d_samples, h_samples, sizeof(SampleT) * num_samples, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_histograms_linear, 0, sizeof(HistoCounterT) * total_bins));
+    CubDebugExit(hipMemcpy(d_samples, h_samples, sizeof(SampleT) * num_samples, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_histograms_linear, 0, sizeof(HistoCounterT) * total_bins));
 
     // Structure of channel histograms
     HistoCounterT *d_histograms[ACTIVE_CHANNELS];
@@ -483,8 +484,8 @@ void Test(
     printf("%s", compare ? "FAIL" : "PASS");
 
     // Flush any stdout/stderr
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
     fflush(stdout);
     fflush(stderr);
 

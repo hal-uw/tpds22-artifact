@@ -29,7 +29,7 @@
 
 /**
  * \file
- * cub::DeviceReduce provides device-wide, parallel operations for computing a reduction across a sequence of data items residing within global memory.
+ * hipcub::DeviceReduce provides device-wide, parallel operations for computing a reduction across a sequence of data items residing within global memory.
  */
 
 #pragma once
@@ -103,7 +103,7 @@ struct DeviceReduce
      * The code snippet below illustrates a custom min reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_radix_sort.cuh>
      *
      * // CustomMin functor
      * struct CustomMin
@@ -125,13 +125,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, min_op);
+     * hipcub::DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, min_op);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run reduction
-     * cub::DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, min_op);
+     * hipcub::DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, min_op);
      *
      * // d_out <-- [0]
      *
@@ -146,14 +146,14 @@ struct DeviceReduce
         typename                    OutputIterator,
         typename                    ReductionOp>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t Reduce(
+    static hipError_t Reduce(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        ReductionOp                 reduction_op,                       ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
@@ -193,7 +193,7 @@ struct DeviceReduce
      * The code snippet below illustrates the sum reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_radix_sort.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int  num_items;      // e.g., 7
@@ -204,13 +204,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_sum, num_items);
+     * hipcub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_sum, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run sum-reduction
-     * cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_sum, num_items);
+     * hipcub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_sum, num_items);
      *
      * // d_out <-- [38]
      *
@@ -223,20 +223,20 @@ struct DeviceReduce
         typename                    InputIterator,
         typename                    OutputIterator>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t Sum(
+    static hipError_t Sum(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
         typedef int Offset;
 
         // Dispatch type
-        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, cub::Sum> DeviceReduceDispatch;
+        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, hipcub::Sum> DeviceReduceDispatch;
 
         return DeviceReduceDispatch::Dispatch(
             d_temp_storage,
@@ -244,7 +244,7 @@ struct DeviceReduce
             d_in,
             d_out,
             num_items,
-            cub::Sum(),
+            hipcub::Sum(),
             stream,
             debug_synchronous);
     }
@@ -265,7 +265,7 @@ struct DeviceReduce
      * The code snippet below illustrates the min-reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_radix_sort.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int  num_items;      // e.g., 7
@@ -276,13 +276,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, d_in, d_min, num_items);
+     * hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, d_in, d_min, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run min-reduction
-     * cub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, d_in, d_min, num_items);
+     * hipcub::DeviceReduce::Min(d_temp_storage, temp_storage_bytes, d_in, d_min, num_items);
      *
      * // d_out <-- [0]
      *
@@ -295,20 +295,20 @@ struct DeviceReduce
         typename                    InputIterator,
         typename                    OutputIterator>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t Min(
+    static hipError_t Min(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
         typedef int Offset;
 
         // Dispatch type
-        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, cub::Min> DeviceReduceDispatch;
+        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, hipcub::Min> DeviceReduceDispatch;
 
         return DeviceReduceDispatch::Dispatch(
             d_temp_storage,
@@ -316,7 +316,7 @@ struct DeviceReduce
             d_in,
             d_out,
             num_items,
-            cub::Min(),
+            hipcub::Min(),
             stream,
             debug_synchronous);
     }
@@ -342,7 +342,7 @@ struct DeviceReduce
      * The code snippet below illustrates the argmin-reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_radix_sort.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int                      num_items;      // e.g., 7
@@ -353,13 +353,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::ArgMin(d_temp_storage, temp_storage_bytes, d_in, d_argmin, num_items);
+     * hipcub::DeviceReduce::ArgMin(d_temp_storage, temp_storage_bytes, d_in, d_argmin, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run argmin-reduction
-     * cub::DeviceReduce::ArgMin(d_temp_storage, temp_storage_bytes, d_in, d_argmin, num_items);
+     * hipcub::DeviceReduce::ArgMin(d_temp_storage, temp_storage_bytes, d_in, d_argmin, num_items);
      *
      * // d_out <-- [{0, 5}]
      *
@@ -372,13 +372,13 @@ struct DeviceReduce
         typename                    InputIterator,
         typename                    OutputIterator>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t ArgMin(
+    static hipError_t ArgMin(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
@@ -389,7 +389,7 @@ struct DeviceReduce
         ArgIndexInputIterator d_argmin_in(d_in, 0);
 
         // Dispatch type
-        typedef DeviceReduceDispatch<ArgIndexInputIterator, OutputIterator, Offset, cub::ArgMin> DeviceReduceDispatch;
+        typedef DeviceReduceDispatch<ArgIndexInputIterator, OutputIterator, Offset, hipcub::ArgMin> DeviceReduceDispatch;
 
         return DeviceReduceDispatch::Dispatch(
             d_temp_storage,
@@ -397,7 +397,7 @@ struct DeviceReduce
             d_argmin_in,
             d_out,
             num_items,
-            cub::ArgMin(),
+            hipcub::ArgMin(),
             stream,
             debug_synchronous);
     }
@@ -418,7 +418,7 @@ struct DeviceReduce
      * The code snippet below illustrates the max-reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_radix_sort.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_radix_sort.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int  num_items;      // e.g., 7
@@ -429,13 +429,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::Max(d_temp_storage, temp_storage_bytes, d_in, d_max, num_items);
+     * hipcub::DeviceReduce::Max(d_temp_storage, temp_storage_bytes, d_in, d_max, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run max-reduction
-     * cub::DeviceReduce::Max(d_temp_storage, temp_storage_bytes, d_in, d_max, num_items);
+     * hipcub::DeviceReduce::Max(d_temp_storage, temp_storage_bytes, d_in, d_max, num_items);
      *
      * // d_out <-- [9]
      *
@@ -448,20 +448,20 @@ struct DeviceReduce
         typename                    InputIterator,
         typename                    OutputIterator>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t Max(
+    static hipError_t Max(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
         typedef int Offset;
 
         // Dispatch type
-        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, cub::Max> DeviceReduceDispatch;
+        typedef DeviceReduceDispatch<InputIterator, OutputIterator, Offset, hipcub::Max> DeviceReduceDispatch;
 
         return DeviceReduceDispatch::Dispatch(
             d_temp_storage,
@@ -469,7 +469,7 @@ struct DeviceReduce
             d_in,
             d_out,
             num_items,
-            cub::Max(),
+            hipcub::Max(),
             stream,
             debug_synchronous);
     }
@@ -495,7 +495,7 @@ struct DeviceReduce
      * The code snippet below illustrates the argmax-reduction of a device vector of \p int items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_reduce.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int                      num_items;      // e.g., 7
@@ -506,13 +506,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::ArgMax(d_temp_storage, temp_storage_bytes, d_in, d_argmax, num_items);
+     * hipcub::DeviceReduce::ArgMax(d_temp_storage, temp_storage_bytes, d_in, d_argmax, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run argmax-reduction
-     * cub::DeviceReduce::ArgMax(d_temp_storage, temp_storage_bytes, d_in, d_argmax, num_items);
+     * hipcub::DeviceReduce::ArgMax(d_temp_storage, temp_storage_bytes, d_in, d_argmax, num_items);
      *
      * // d_out <-- [{9, 6}]
      *
@@ -525,13 +525,13 @@ struct DeviceReduce
         typename                    InputIterator,
         typename                    OutputIterator>
     CUB_RUNTIME_FUNCTION
-    static cudaError_t ArgMax(
+    static hipError_t ArgMax(
         void                        *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,                ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                               ///< [in] Pointer to the input sequence of data items
         OutputIterator              d_out,                              ///< [out] Pointer to the output aggregate
         int                         num_items,                          ///< [in] Total number of input items (i.e., length of \p d_in)
-        cudaStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream              = 0,            ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous   = false)        ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         // Signed integer type for global offsets
@@ -542,7 +542,7 @@ struct DeviceReduce
         ArgIndexInputIterator d_argmax_in(d_in, 0);
 
         // Dispatch type
-        typedef DeviceReduceDispatch<ArgIndexInputIterator, OutputIterator, Offset, cub::ArgMax> DeviceReduceDispatch;
+        typedef DeviceReduceDispatch<ArgIndexInputIterator, OutputIterator, Offset, hipcub::ArgMax> DeviceReduceDispatch;
 
         return DeviceReduceDispatch::Dispatch(
             d_temp_storage,
@@ -550,7 +550,7 @@ struct DeviceReduce
             d_argmax_in,
             d_out,
             num_items,
-            cub::ArgMax(),
+            hipcub::ArgMax(),
             stream,
             debug_synchronous);
     }
@@ -591,7 +591,7 @@ struct DeviceReduce
      * by runs of associated \p int keys.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_reduce.cuh>
      *
      * // CustomMin functor
      * struct CustomMin
@@ -616,13 +616,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, reduction_op, num_items);
+     * hipcub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, reduction_op, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run reduce-by-key
-     * cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, reduction_op, num_items);
+     * hipcub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, reduction_op, num_items);
      *
      * // d_keys_out        <-- [0, 2, 9, 5, 8]
      * // d_values_out      <-- [0, 1, 6, 2, 4]
@@ -645,7 +645,7 @@ struct DeviceReduce
         typename                    NumSegmentsIterator,
         typename                    ReductionOp>
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t ReduceByKey(
+    static hipError_t ReduceByKey(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         KeyInputIterator            d_keys_in,                      ///< [in] Pointer to consecutive runs of input keys
@@ -653,9 +653,9 @@ struct DeviceReduce
         ValueInputIterator          d_values_in,                    ///< [in] Pointer to consecutive runs of input values
         ValueOutputIterator         d_values_out,                   ///< [out] Pointer to output value aggregates (one aggregate per run)
         NumSegmentsIterator         d_num_segments,                 ///< [out] Pointer to total number of segments
-        ReductionOp                 reduction_op,                   ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+        ReductionOp                 reduction_op,                   ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
         int                         num_items,                      ///< [in] Total number of associated key+value pairs (i.e., the length of \p d_in_keys and \p d_in_values)
-        cudaStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous  = false)     ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  May cause significant slowdown.  Default is \p false.
     {
         typedef int                 Offset;         // Signed integer type for global offsets
@@ -713,7 +713,7 @@ struct DeviceReduce
      * The code snippet below illustrates the run-length encoding of a sequence of \p int values.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_reduce.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input and output
      * int          num_items;          // e.g., 8
@@ -726,13 +726,13 @@ struct DeviceReduce
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceReduce::RunLengthEncode(d_temp_storage, temp_storage_bytes, d_in, d_compacted_out, d_counts_out, d_num_segments, num_items);
+     * hipcub::DeviceReduce::RunLengthEncode(d_temp_storage, temp_storage_bytes, d_in, d_compacted_out, d_counts_out, d_num_segments, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run encoding
-     * cub::DeviceReduce::RunLengthEncode(d_temp_storage, temp_storage_bytes, d_in, d_compacted_out, d_counts_out, d_num_segments, num_items);
+     * hipcub::DeviceReduce::RunLengthEncode(d_temp_storage, temp_storage_bytes, d_in, d_compacted_out, d_counts_out, d_num_segments, num_items);
      *
      * // d_keys_out        <-- [0, 2, 9, 5, 8]
      * // d_values_out      <-- [1, 2, 1, 3, 1]
@@ -751,7 +751,7 @@ struct DeviceReduce
         typename                    CountsOutputIterator,
         typename                    NumSegmentsIterator>
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t RunLengthEncode(
+    static hipError_t RunLengthEncode(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                           ///< [in] Pointer to consecutive runs of input keys
@@ -759,7 +759,7 @@ struct DeviceReduce
         CountsOutputIterator        d_counts_out,                   ///< [out] Pointer to output value aggregates (one aggregate per run)
         NumSegmentsIterator         d_num_segments,                 ///< [out] Pointer to total number of segments
         int                         num_items,                      ///< [in] Total number of associated key+value pairs (i.e., the length of \p d_in_keys and \p d_in_values)
-        cudaStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous  = false)     ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  May cause significant slowdown.  Default is \p false.
     {
         // Data type of value iterator
@@ -769,7 +769,7 @@ struct DeviceReduce
         typedef NullType*   FlagIterator;               // Flag iterator type (not used)
         typedef NullType    SelectOp;                   // Selection op (not used)
         typedef Equality    EqualityOp;                 // Default == operator
-        typedef cub::Sum    ReductionOp;                // Value reduction operator
+        typedef hipcub::Sum    ReductionOp;                // Value reduction operator
 
         // Generator type for providing 1s values for run-length reduction
         typedef ConstantInputIterator<Value, Offset> CountsInputIterator;

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockShift class provides [<em>collective</em>](index.html#sec0) methods for rearranging data partitioned across a CUDA thread block.
+ * The hipcub::BlockShift class provides [<em>collective</em>](index.html#sec0) methods for rearranging data partitioned across a CUDA thread block.
  */
 
 #pragma once

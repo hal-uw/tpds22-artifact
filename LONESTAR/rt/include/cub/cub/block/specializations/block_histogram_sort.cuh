@@ -28,7 +28,7 @@
 
 /**
  * \file
- * The cub::BlockHistogramSort class provides sorting-based methods for constructing block-wide histograms from data samples partitioned across a CUDA thread block.
+ * The hipcub::BlockHistogramSort class provides sorting-based methods for constructing block-wide histograms from data samples partitioned across a CUDA thread block.
  */
 
 #pragma once
@@ -75,7 +75,7 @@ struct BlockHistogramSort
             4,
             (PTX_ARCH >= 350) ? true : false,
             BLOCK_SCAN_WARP_SCANS,
-            (PTX_ARCH >= 350) ? cudaSharedMemBankSizeEightByte : cudaSharedMemBankSizeFourByte,
+            (PTX_ARCH >= 350) ? hipSharedMemBankSizeEightByte : hipSharedMemBankSizeFourByte,
             BLOCK_DIM_Y,
             BLOCK_DIM_Z,
             PTX_ARCH>

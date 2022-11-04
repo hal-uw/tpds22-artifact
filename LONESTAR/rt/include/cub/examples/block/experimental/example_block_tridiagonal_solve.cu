@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -27,7 +28,7 @@
  ******************************************************************************/
 
 /******************************************************************************
- * Simple demonstration of cub::BlockTridiagonalSolve
+ * Simple demonstration of hipcub::BlockTridiagonalSolve
  ******************************************************************************/
 
 // Ensure printing of CUDA runtime errors to console (define before including cub.h)
@@ -37,11 +38,11 @@
 #include <iostream>
 #include <algorithm>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include "../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -68,7 +69,7 @@ int g_grid_size = 1;
 template <
     int                 BLOCK_THREADS,      /// The thread block size in threads
     int                 ITEMS_PER_THREAD,   /// The number of consecutive unknowns partitioned onto each thread
-    BlockScanAlgorithm  SCAN_ALGORITHM,     /// cub::BlockScanAlgorithm enumerator specifying the underlying algorithm to use (e.g., cub::BLOCK_SCAN_RAKING)
+    BlockScanAlgorithm  SCAN_ALGORITHM,     /// hipcub::BlockScanAlgorithm enumerator specifying the underlying algorithm to use (e.g., hipcub::BLOCK_SCAN_RAKING)
     typename            T>                  /// Data type of numeric coefficients (e.g., \p float or \p double)
 __global__ void BlockSolveKernel(
     T       *d_a,                           ///< [in] Coefficients within the subdiagonal of the matrix multipicand A
@@ -325,12 +326,12 @@ void Test()
     clock_t *d_elapsed  = NULL;
 
     // Initialize device arrays
-    cudaMalloc((void**)&d_a,        sizeof(T) * TILE_SIZE * g_grid_size);
-    cudaMalloc((void**)&d_b,        sizeof(T) * TILE_SIZE * g_grid_size);
-    cudaMalloc((void**)&d_c,        sizeof(T) * TILE_SIZE * g_grid_size);
-    cudaMalloc((void**)&d_d,        sizeof(T) * TILE_SIZE * g_grid_size);
-    cudaMalloc((void**)&d_x,        sizeof(T) * TILE_SIZE * g_grid_size);
-    cudaMalloc((void**)&d_elapsed,  sizeof(clock_t) * g_grid_size);
+    hipMalloc((void**)&d_a,        sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMalloc((void**)&d_b,        sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMalloc((void**)&d_c,        sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMalloc((void**)&d_d,        sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMalloc((void**)&d_x,        sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMalloc((void**)&d_elapsed,  sizeof(clock_t) * g_grid_size);
 
     // CUDA device props
     Device device;
@@ -342,17 +343,17 @@ void Test()
         BLOCK_THREADS));
 
     // Copy problem to device
-    cudaMemcpy(d_a, h_a, sizeof(T) * TILE_SIZE * g_grid_size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_b, h_b, sizeof(T) * TILE_SIZE * g_grid_size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_c, h_c, sizeof(T) * TILE_SIZE * g_grid_size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_d, h_d, sizeof(T) * TILE_SIZE * g_grid_size, cudaMemcpyHostToDevice);
-    cudaMemset(d_x, 0, sizeof(T) * TILE_SIZE * g_grid_size);
+    hipMemcpy(d_a, h_a, sizeof(T) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice);
+    hipMemcpy(d_b, h_b, sizeof(T) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice);
+    hipMemcpy(d_c, h_c, sizeof(T) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice);
+    hipMemcpy(d_d, h_d, sizeof(T) * TILE_SIZE * g_grid_size, hipMemcpyHostToDevice);
+    hipMemset(d_x, 0, sizeof(T) * TILE_SIZE * g_grid_size);
 
     printf("BlockTridiagonalSolve %d items (%d timing iterations, %d blocks, %d threads, %d items per thread, %d SM occupancy):\n",
         TILE_SIZE, g_timing_iterations, g_grid_size, BLOCK_THREADS, ITEMS_PER_THREAD, max_sm_occupancy);
 
     // Run aggregate/prefix kernel
-    BlockSolveKernel<BLOCK_THREADS, ITEMS_PER_THREAD, SCAN_ALGORITHM><<<g_grid_size, BLOCK_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockSolveKernel<BLOCK_THREADS, ITEMS_PER_THREAD, SCAN_ALGORITHM>), dim3(g_grid_size), dim3(BLOCK_THREADS), 0, 0, 
         d_a,
         d_b,
         d_c,
@@ -377,7 +378,7 @@ void Test()
             timer.Start();
 
             // Run aggregate/prefix kernel
-            BlockSolveKernel<BLOCK_THREADS, ITEMS_PER_THREAD, SCAN_ALGORITHM><<<g_grid_size, BLOCK_THREADS>>>(
+            hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockSolveKernel<BLOCK_THREADS, ITEMS_PER_THREAD, SCAN_ALGORITHM>), dim3(g_grid_size), dim3(BLOCK_THREADS), 0, 0, 
                 d_a,
                 d_b,
                 d_c,
@@ -390,12 +391,12 @@ void Test()
 
             // Copy clocks from device
             clock_t clocks;
-            CubDebugExit(cudaMemcpy(&clocks, d_elapsed, sizeof(clock_t), cudaMemcpyDeviceToHost));
+            CubDebugExit(hipMemcpy(&clocks, d_elapsed, sizeof(clock_t), hipMemcpyDeviceToHost));
             elapsed_clocks += clocks;
         }
 
         // Check for kernel errors and STDIO from the kernel, if any
-        CubDebugExit(cudaDeviceSynchronize());
+        CubDebugExit(hipDeviceSynchronize());
 
         // Display timing results
         float avg_millis            = elapsed_millis / g_timing_iterations;
@@ -416,12 +417,12 @@ void Test()
     if (h_d) delete[] h_d;
     if (h_x) delete[] h_x;
 
-    if (d_a) cudaFree(d_a);
-    if (d_b) cudaFree(d_b);
-    if (d_c) cudaFree(d_c);
-    if (d_d) cudaFree(d_d);
-    if (d_x) cudaFree(d_x);
-    if (d_elapsed) cudaFree(d_elapsed);
+    if (d_a) hipFree(d_a);
+    if (d_b) hipFree(d_b);
+    if (d_c) hipFree(d_c);
+    if (d_d) hipFree(d_d);
+    if (d_x) hipFree(d_x);
+    if (d_elapsed) hipFree(d_elapsed);
 
     AssertEquals(0, compare);
 }

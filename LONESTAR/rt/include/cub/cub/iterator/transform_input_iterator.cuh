@@ -78,7 +78,7 @@ namespace cub {
  * dereference an array of integers, tripling the values and converting them to doubles.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/transform_input_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/transform_input_iterator.cuh>
  *
  * // Functor for tripling integer values and converting to doubles
  * struct TripleDoubler
@@ -94,7 +94,7 @@ namespace cub {
  * TripleDoubler conversion_op;
  *
  * // Create an iterator wrapper
- * cub::TransformInputIterator<double, TripleDoubler, int*> itr(d_in, conversion_op);
+ * hipcub::TransformInputIterator<double, TripleDoubler, int*> itr(d_in, conversion_op);
  *
  * // Within device code:
  * printf("%f\n", itr[0]);  // 24.0

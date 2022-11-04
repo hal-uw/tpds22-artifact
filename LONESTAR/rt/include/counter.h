@@ -90,9 +90,9 @@ class Counter {
 
 #if CUDA_VERSION < 6050
     assert(dynsmem == 0);
-    cub::MaxSmOccupancy(res, function, tpb);
+    hipcub::MaxSmOccupancy(res, function, tpb);
 #else
-    assert(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&res, function, tpb, dynsmem) == cudaSuccess);
+    assert(hipOccupancyMaxActiveBlocksPerMultiprocessor(&res, function, tpb, dynsmem) == hipSuccess);
 #endif
 
     return res;    

@@ -81,14 +81,14 @@ namespace cub {
  * dereference a device array of doubles through texture cache.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/tex_obj_input_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/tex_obj_input_iterator.cuh>
  *
  * // Declare, allocate, and initialize a device array
  * int num_items;   // e.g., 7
  * double *d_in;    // e.g., [8.0, 6.0, 7.0, 5.0, 3.0, 0.0, 9.0]
  *
  * // Create an iterator wrapper
- * cub::TexObjInputIterator<double> itr;
+ * hipcub::TexObjInputIterator<double> itr;
  * itr.BindTexture(d_in, sizeof(double) * num_items);
  * ...
  *
@@ -145,7 +145,7 @@ private:
 
     T*                  ptr;
     difference_type     tex_offset;
-    cudaTextureObject_t tex_obj;
+    hipTextureObject_t tex_obj;
 
 public:
 
@@ -158,31 +158,31 @@ public:
     {}
 
     /// Use this iterator to bind \p ptr with a texture reference
-    cudaError_t BindTexture(
-        T               *ptr,               ///< Native pointer to wrap that is aligned to cudaDeviceProp::textureAlignment
+    hipError_t BindTexture(
+        T               *ptr,               ///< Native pointer to wrap that is aligned to hipDeviceProp_t::textureAlignment
         size_t          bytes,              ///< Number of bytes in the range
         size_t          tex_offset = 0)     ///< Offset (in items) from \p ptr denoting the position of the iterator
     {
         this->ptr = ptr;
         this->tex_offset = tex_offset;
 
-        cudaChannelFormatDesc   channel_desc = cudaCreateChannelDesc<TextureWord>();
-        cudaResourceDesc        res_desc;
-        cudaTextureDesc         tex_desc;
-        memset(&res_desc, 0, sizeof(cudaResourceDesc));
-        memset(&tex_desc, 0, sizeof(cudaTextureDesc));
-        res_desc.resType                = cudaResourceTypeLinear;
+        hipChannelFormatDesc   channel_desc = hipCreateChannelDesc<TextureWord>();
+        hipResourceDesc        res_desc;
+        hipTextureDesc         tex_desc;
+        memset(&res_desc, 0, sizeof(hipResourceDesc));
+        memset(&tex_desc, 0, sizeof(hipTextureDesc));
+        res_desc.resType                = hipResourceTypeLinear;
         res_desc.res.linear.devPtr      = ptr;
         res_desc.res.linear.desc        = channel_desc;
         res_desc.res.linear.sizeInBytes = bytes;
-        tex_desc.readMode               = cudaReadModeElementType;
-        return cudaCreateTextureObject(&tex_obj, &res_desc, &tex_desc, NULL);
+        tex_desc.readMode               = hipReadModeElementType;
+        return hipCreateTextureObject(&tex_obj, &res_desc, &tex_desc, NULL);
     }
 
     /// Unbind this iterator from its texture reference
-    cudaError_t UnbindTexture()
+    hipError_t UnbindTexture()
     {
-        return cudaDestroyTextureObject(tex_obj);
+        return hipDestroyTextureObject(tex_obj);
     }
 
     /// Postfix increment

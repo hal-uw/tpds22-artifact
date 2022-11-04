@@ -47,7 +47,7 @@
 
 #include "../../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     Initialize(h_in, h_flags, num_items, max_segment);
     int num_selected = Solve(h_in, h_flags, h_reference, num_items);
 
-    printf("cub::DevicePartition::Flagged %d items, %d selected (avg distance %d), %d-byte elements\n",
+    printf("hipcub::DevicePartition::Flagged %d items, %d selected (avg distance %d), %d-byte elements\n",
         num_items, num_selected, (num_selected > 0) ? num_items / num_selected : 0, (int) sizeof(int));
     fflush(stdout);
 
@@ -190,8 +190,8 @@ int main(int argc, char** argv)
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_flags, sizeof(unsigned char) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(int) * num_items, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_flags, h_flags, sizeof(unsigned char) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(int) * num_items, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_flags, h_flags, sizeof(unsigned char) * num_items, hipMemcpyHostToDevice));
 
     // Allocate device output array and num selected
     int     *d_out            = NULL;

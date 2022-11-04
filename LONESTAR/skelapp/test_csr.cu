@@ -1,4 +1,4 @@
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include "gg.h"
 
 int main(int argc, char *argv[]) {

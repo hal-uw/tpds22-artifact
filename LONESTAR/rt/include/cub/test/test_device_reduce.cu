@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -44,7 +45,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -78,11 +79,11 @@ struct CustomMax
  */
 template <typename InputIterator, typename OutputIterator, typename ReductionOp>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -90,11 +91,11 @@ cudaError_t Dispatch(
     OutputIterator      d_out,
     int                 num_items,
     ReductionOp         reduction_op,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::Reduce(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, reduction_op, 0, debug_synchronous);
@@ -107,23 +108,23 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
     InputIterator       d_in,
     OutputIterator      d_out,
     int                 num_items,
-    cub::Sum            reduction_op,
-    cudaStream_t        stream,
+    hipcub::Sum            reduction_op,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, 0, debug_synchronous);
@@ -136,23 +137,23 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
     InputIterator       d_in,
     OutputIterator      d_out,
     int                 num_items,
-    cub::Min            reduction_op,
-    cudaStream_t        stream,
+    hipcub::Min            reduction_op,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::Min(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, 0, debug_synchronous);
@@ -165,23 +166,23 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
     InputIterator       d_in,
     OutputIterator      d_out,
     int                 num_items,
-    cub::Max            reduction_op,
-    cudaStream_t        stream,
+    hipcub::Max            reduction_op,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::Max(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, 0, debug_synchronous);
@@ -194,23 +195,23 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
     InputIterator       d_in,
     OutputIterator      d_out,
     int                 num_items,
-    cub::ArgMin         reduction_op,
-    cudaStream_t        stream,
+    hipcub::ArgMin         reduction_op,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::ArgMin(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, 0, debug_synchronous);
@@ -223,23 +224,23 @@ cudaError_t Dispatch(
  */
 template <typename InputIterator, typename OutputIterator>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
     InputIterator       d_in,
     OutputIterator      d_out,
     int                 num_items,
-    cub::ArgMax         reduction_op,
-    cudaStream_t        stream,
+    hipcub::ArgMax         reduction_op,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to device reduction directly
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::ArgMax(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, 0, debug_synchronous);
@@ -256,11 +257,11 @@ cudaError_t Dispatch(
  * Dispatch to reduction entrypoint (min or max specialization)
  */
 template <typename InputIterator, typename OutputIterator, typename ReductionOp>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -268,7 +269,7 @@ cudaError_t Dispatch(
     OutputIterator      d_out,
     int                 num_items,
     ReductionOp         reduction_op,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -280,7 +281,7 @@ cudaError_t Dispatch(
     else
     {
         T init;
-        CubDebugExit(cudaMemcpy(&init, d_in + 0, sizeof(T), cudaMemcpyDeviceToHost));
+        CubDebugExit(hipMemcpy(&init, d_in + 0, sizeof(T), hipMemcpyDeviceToHost));
 
         thrust::device_ptr<T> d_in_wrapper(d_in);
         T retval;
@@ -289,21 +290,21 @@ cudaError_t Dispatch(
             retval = thrust::reduce(d_in_wrapper, d_in_wrapper + num_items, init, reduction_op);
         }
 
-        CubDebugExit(cudaMemcpy(d_out, &retval, sizeof(T), cudaMemcpyHostToDevice));
+        CubDebugExit(hipMemcpy(d_out, &retval, sizeof(T), hipMemcpyHostToDevice));
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 /**
  * Dispatch to reduction entrypoint (sum specialization)
  */
 template <typename InputIterator, typename OutputIterator>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>    dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -311,7 +312,7 @@ cudaError_t Dispatch(
     OutputIterator      d_out,
     int                 num_items,
     Sum                 reduction_op,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     typedef typename std::iterator_traits<InputIterator>::value_type T;
@@ -329,10 +330,10 @@ cudaError_t Dispatch(
             retval = thrust::reduce(d_in_wrapper, d_in_wrapper + num_items);
         }
 
-        CubDebugExit(cudaMemcpy(d_out, &retval, sizeof(T), cudaMemcpyHostToDevice));
+        CubDebugExit(hipMemcpy(d_out, &retval, sizeof(T), hipMemcpyHostToDevice));
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -353,7 +354,7 @@ template <
 __global__ void CnpDispatchKernel(
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              temp_storage_bytes,
@@ -364,7 +365,7 @@ __global__ void CnpDispatchKernel(
     bool                debug_synchronous)
 {
 #ifndef CUB_CDP
-    *d_cdp_error = cudaErrorNotSupported;
+    *d_cdp_error = hipErrorNotSupported;
 #else
     *d_cdp_error = Dispatch(Int2Type<CUB>(), timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, reduction_op, 0, debug_synchronous);
     *d_temp_storage_bytes = temp_storage_bytes;
@@ -377,11 +378,11 @@ __global__ void CnpDispatchKernel(
  */
 template <typename InputIterator, typename OutputIterator, typename ReductionOp>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CDP>       dispatch_to,
     int                 timing_timing_iterations,
     size_t              *d_temp_storage_bytes,
-    cudaError_t         *d_cdp_error,
+    hipError_t         *d_cdp_error,
 
     void                *d_temp_storage,
     size_t              &temp_storage_bytes,
@@ -389,18 +390,18 @@ cudaError_t Dispatch(
     OutputIterator      d_out,
     int                 num_items,
     ReductionOp         reduction_op,
-    cudaStream_t        stream,
+    hipStream_t        stream,
     bool                debug_synchronous)
 {
     // Invoke kernel to invoke device-side dispatch
-    CnpDispatchKernel<<<1,1>>>(timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, reduction_op, debug_synchronous);
+    hipLaunchKernelGGL(CnpDispatchKernel, dim3(1), dim3(1), 0, 0, timing_timing_iterations, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, reduction_op, debug_synchronous);
 
     // Copy out temp_storage_bytes
-    CubDebugExit(cudaMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, hipMemcpyDeviceToHost));
 
     // Copy out error
-    cudaError_t retval;
-    CubDebugExit(cudaMemcpy(&retval, d_cdp_error, sizeof(cudaError_t) * 1, cudaMemcpyDeviceToHost));
+    hipError_t retval;
+    CubDebugExit(hipMemcpy(&retval, d_cdp_error, sizeof(hipError_t) * 1, hipMemcpyDeviceToHost));
     return retval;
 }
 
@@ -474,9 +475,9 @@ void Test(
 
     // Allocate CDP device arrays for temp storage size and error
     size_t          *d_temp_storage_bytes = NULL;
-    cudaError_t     *d_cdp_error = NULL;
+    hipError_t     *d_cdp_error = NULL;
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_temp_storage_bytes,  sizeof(size_t) * 1));
-    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(cudaError_t) * 1));
+    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(hipError_t) * 1));
 
     // Request and allocate temporary storage
     void            *d_temp_storage = NULL;
@@ -485,7 +486,7 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Clear device output
-    CubDebugExit(cudaMemset(d_out, 0, sizeof(T) * 1));
+    CubDebugExit(hipMemset(d_out, 0, sizeof(T) * 1));
 
     // Run warmup/correctness iteration
     CubDebugExit(Dispatch(Int2Type<BACKEND>(), 1, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, reduction_op, 0, true));
@@ -537,7 +538,7 @@ void TestPointer(
     ReductionOp reduction_op,
     char*       type_string)
 {
-    printf("\n\nPointer %s cub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
+    printf("\n\nPointer %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<ReductionOp, Sum>::VALUE) ? "Sum" : (Equals<ReductionOp, Min>::VALUE) ? "Min" : "Max",
         num_items, type_string, (int) sizeof(T),
@@ -557,7 +558,7 @@ void TestPointer(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * num_items, hipMemcpyHostToDevice));
 
     // Run test
     Test<BACKEND>(d_in, h_reference, num_items, reduction_op);
@@ -580,7 +581,7 @@ void TestPointer(
     ArgMin      reduction_op,
     char*       type_string)
 {
-    printf("\n\nPointer %s cub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
+    printf("\n\nPointer %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         "ArgMin", num_items, type_string, (int) sizeof(T),
         (gen_mode == RANDOM) ? "RANDOM" : (gen_mode == INTEGER_SEED) ? "SEQUENTIAL" : "HOMOGENOUS");
@@ -607,7 +608,7 @@ void TestPointer(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * num_items, hipMemcpyHostToDevice));
 
     // Run test
     Test<BACKEND>(d_in, h_reference, num_items, reduction_op);
@@ -630,7 +631,7 @@ void TestPointer(
     ArgMax      reduction_op,
     char*       type_string)
 {
-    printf("\n\nPointer %s cub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
+    printf("\n\nPointer %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements, gen-mode %s\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         "ArgMax", num_items, type_string, (int) sizeof(T),
         (gen_mode == RANDOM) ? "RANDOM" : (gen_mode == INTEGER_SEED) ? "SEQUENTIAL" : "HOMOGENOUS");
@@ -657,7 +658,7 @@ void TestPointer(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * num_items, hipMemcpyHostToDevice));
 
     // Run test
     Test<BACKEND>(d_in, h_reference, num_items, reduction_op);
@@ -680,7 +681,7 @@ void TestIterator(
     ReductionOp reduction_op,
     char*       type_string)
 {
-    printf("\n\nIterator %s cub::DeviceReduce::%s %d items, %s %d-byte elements\n",
+    printf("\n\nIterator %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<ReductionOp, Sum>::VALUE) ? "Sum" : (Equals<ReductionOp, Min>::VALUE) ? "Min" : "Max",
         num_items, type_string, (int) sizeof(T));
@@ -710,7 +711,7 @@ void TestIterator(
     ArgMin      reduction_op,
     char*       type_string)
 {
-    printf("\n\nIterator %s cub::DeviceReduce::%s %d items, %s %d-byte elements\n",
+    printf("\n\nIterator %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         "ArgMin",
         num_items, type_string, (int) sizeof(T));
@@ -748,7 +749,7 @@ void TestIterator(
     ArgMax      reduction_op,
     char*       type_string)
 {
-    printf("\n\nIterator %s cub::DeviceReduce::%s %d items, %s %d-byte elements\n",
+    printf("\n\nIterator %s hipcub::DeviceReduce::%s %d items, %s %d-byte elements\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         "ArgMax",
         num_items, type_string, (int) sizeof(T));

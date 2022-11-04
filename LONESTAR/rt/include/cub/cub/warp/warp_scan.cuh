@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::WarpScan class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel prefix scan of items partitioned across a CUDA thread warp.
+ * The hipcub::WarpScan class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel prefix scan of items partitioned across a CUDA thread warp.
  */
 
 #pragma once
@@ -84,12 +85,12 @@ namespace cub {
  * 128 threads (one per each of the 32-thread warps).
  * \par
  * \code
- * #include <cub/cub.cuh>
+ * #include <hipcub/hipcub.hpp>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize WarpScan for type int
- *     typedef cub::WarpScan<int> WarpScan;
+ *     typedef hipcub::WarpScan<int> WarpScan;
  *
  *     // Allocate WarpScan shared memory for 4 warps
  *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -112,12 +113,12 @@ namespace cub {
  * 128 threads.
  * \par
  * \code
- * #include <cub/cub.cuh>
+ * #include <hipcub/hipcub.hpp>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize WarpScan for type int
- *     typedef cub::WarpScan<int> WarpScan;
+ *     typedef hipcub::WarpScan<int> WarpScan;
  *
  *     // Allocate WarpScan shared memory for one warp
  *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -225,12 +226,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -252,7 +253,7 @@ public:
         T               input,              ///< [in] Calling thread's input item.
         T               &output)            ///< [out] Calling thread's output item.  May be aliased with \p input.
     {
-        InternalWarpScan(temp_storage).InclusiveScan(input, output, cub::Sum());
+        InternalWarpScan(temp_storage).InclusiveScan(input, output, hipcub::Sum());
     }
 
 
@@ -268,12 +269,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -297,7 +298,7 @@ public:
         T               &output,            ///< [out] Calling thread's output item.  May be aliased with \p input.
         T               &warp_aggregate)    ///< [out] Warp-wide aggregate reduction of input items.
     {
-        InternalWarpScan(temp_storage).InclusiveScan(input, output, cub::Sum(), warp_aggregate);
+        InternalWarpScan(temp_storage).InclusiveScan(input, output, hipcub::Sum(), warp_aggregate);
     }
 
 
@@ -320,7 +321,7 @@ public:
      * of 32 integer items that are partitioned across the warp.
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * // A stateful callback functor that maintains a running prefix to be applied
      * // during consecutive scan operations.
@@ -345,7 +346,7 @@ public:
      * __global__ void ExampleKernel(int *d_data, int num_items, ...)
      * {
      *     // Specialize WarpScan for int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for one warp
      *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -412,7 +413,7 @@ private:
     {
         // Delegate to regular scan for non-integer types (because we won't be able to use subtraction)
         T identity = ZeroInitialize<T>();
-        InternalWarpScan(temp_storage).Scan(input, inclusive_output, exclusive_output, identity, cub::Sum());
+        InternalWarpScan(temp_storage).Scan(input, inclusive_output, exclusive_output, identity, hipcub::Sum());
     }
 
     /// Computes an exclusive prefix sum across the calling warp.
@@ -429,7 +430,7 @@ private:
     {
         // Delegate to regular scan for non-integer types (because we won't be able to use subtraction)
         T identity = ZeroInitialize<T>();
-        ExclusiveScan(input, output, identity, cub::Sum());
+        ExclusiveScan(input, output, identity, hipcub::Sum());
     }
 
     /// Computes an exclusive prefix sum across the calling warp.  Also provides every thread with the warp-wide \p warp_aggregate of all inputs.
@@ -446,7 +447,7 @@ private:
     {
         // Delegate to regular scan for non-integer types (because we won't be able to use subtraction)
         T identity = ZeroInitialize<T>();
-        ExclusiveScan(input, output, identity, cub::Sum(), warp_aggregate);
+        ExclusiveScan(input, output, identity, hipcub::Sum(), warp_aggregate);
     }
 
     /// Computes an exclusive prefix sum across the calling warp.  Instead of using 0 as the warp-wide prefix, the call-back functor \p warp_prefix_op is invoked to provide the "seed" value that logically prefixes the warp's scan inputs.  Also provides every thread with the warp-wide \p warp_aggregate of all inputs.
@@ -465,7 +466,7 @@ private:
     {
         // Delegate to regular scan for non-integer types (because we won't be able to use subtraction)
         T identity = ZeroInitialize<T>();
-        ExclusiveScan(input, output, identity, cub::Sum(), warp_aggregate, warp_prefix_op);
+        ExclusiveScan(input, output, identity, hipcub::Sum(), warp_aggregate, warp_prefix_op);
     }
 
 public:
@@ -492,12 +493,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -539,12 +540,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -594,7 +595,7 @@ public:
      * of 32 integer items that are partitioned across the warp.
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * // A stateful callback functor that maintains a running prefix to be applied
      * // during consecutive scan operations.
@@ -619,7 +620,7 @@ public:
      * __global__ void ExampleKernel(int *d_data, int num_items, ...)
      * {
      *     // Specialize WarpScan for int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for one warp
      *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -679,12 +680,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -694,7 +695,7 @@ public:
      *
      *     // Compute inclusive warp-wide prefix max scans
      *     int warp_id = threadIdx.x / 32;
-     *     WarpScan(temp_storage[warp_id]).InclusiveScan(thread_data, thread_data, cub::Max());
+     *     WarpScan(temp_storage[warp_id]).InclusiveScan(thread_data, thread_data, hipcub::Max());
      *
      * \endcode
      * \par
@@ -726,12 +727,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -743,7 +744,7 @@ public:
      *     int warp_aggregate;
      *     int warp_id = threadIdx.x / 32;
      *     WarpScan(temp_storage[warp_id]).InclusiveScan(
-     *         thread_data, thread_data, cub::Max(), warp_aggregate);
+     *         thread_data, thread_data, hipcub::Max(), warp_aggregate);
      *
      * \endcode
      * \par
@@ -785,7 +786,7 @@ public:
      * of 32 integer items that are partitioned across the warp.
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * // A stateful callback functor that maintains a running prefix to be applied
      * // during consecutive scan operations.
@@ -810,7 +811,7 @@ public:
      * __global__ void ExampleKernel(int *d_data, int num_items, ...)
      * {
      *     // Specialize WarpScan for int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for one warp
      *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -827,7 +828,7 @@ public:
      *         // Collectively compute the warp-wide inclusive prefix max scan
      *         int warp_aggregate;
      *         WarpScan(temp_storage).InclusiveScan(
-     *             thread_data, thread_data, cub::Max(), warp_aggregate, prefix_op);
+     *             thread_data, thread_data, hipcub::Max(), warp_aggregate, prefix_op);
      *
      *         // Store scanned items to output segment
      *         d_data[block_offset] = thread_data;
@@ -884,12 +885,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -899,7 +900,7 @@ public:
      *
      *     // Compute exclusive warp-wide prefix max scans
      *     int warp_id = threadIdx.x / 32;
-     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, INT_MIN, cub::Max());
+     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, INT_MIN, hipcub::Max());
      *
      * \endcode
      * \par
@@ -933,12 +934,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -949,7 +950,7 @@ public:
      *     // Compute exclusive warp-wide prefix max scans
      *     int warp_aggregate;
      *     int warp_id = threadIdx.x / 32;
-     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, INT_MIN, cub::Max(), warp_aggregate);
+     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, INT_MIN, hipcub::Max(), warp_aggregate);
      *
      * \endcode
      * \par
@@ -992,7 +993,7 @@ public:
      * of 32 integer items that are partitioned across the warp.
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * // A stateful callback functor that maintains a running prefix to be applied
      * // during consecutive scan operations.
@@ -1017,7 +1018,7 @@ public:
      * __global__ void ExampleKernel(int *d_data, int num_items, ...)
      * {
      *     // Specialize WarpScan for int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for one warp
      *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -1034,7 +1035,7 @@ public:
      *         // Collectively compute the warp-wide exclusive prefix max scan
      *         int warp_aggregate;
      *         WarpScan(temp_storage).ExclusiveScan(
-     *             thread_data, thread_data, INT_MIN, cub::Max(), warp_aggregate, prefix_op);
+     *             thread_data, thread_data, INT_MIN, hipcub::Max(), warp_aggregate, prefix_op);
      *
      *         // Store scanned items to output segment
      *         d_data[block_offset] = thread_data;
@@ -1094,12 +1095,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -1109,7 +1110,7 @@ public:
      *
      *     // Compute exclusive warp-wide prefix max scans
      *     int warp_id = threadIdx.x / 32;
-     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, cub::Max());
+     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, hipcub::Max());
      *
      * \endcode
      * \par
@@ -1143,12 +1144,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -1159,7 +1160,7 @@ public:
      *     // Compute exclusive warp-wide prefix max scans
      *     int warp_aggregate;
      *     int warp_id = threadIdx.x / 32;
-     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, cub::Max(), warp_aggregate);
+     *     WarpScan(temp_storage[warp_id]).ExclusiveScan(thread_data, thread_data, hipcub::Max(), warp_aggregate);
      *
      * \endcode
      * \par
@@ -1201,7 +1202,7 @@ public:
      * of 32 integer items that are partitioned across the warp.
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * // A stateful callback functor that maintains a running prefix to be applied
      * // during consecutive scan operations.
@@ -1226,7 +1227,7 @@ public:
      * __global__ void ExampleKernel(int *d_data, int num_items, ...)
      * {
      *     // Specialize WarpScan for int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for one warp
      *     __shared__ typename WarpScan::TempStorage temp_storage;
@@ -1243,7 +1244,7 @@ public:
      *         // Collectively compute the warp-wide exclusive prefix max scan
      *         int warp_aggregate;
      *         WarpScan(temp_storage).ExclusiveScan(
-     *             thread_data, thread_data, INT_MIN, cub::Max(), warp_aggregate, prefix_op);
+     *             thread_data, thread_data, INT_MIN, hipcub::Max(), warp_aggregate, prefix_op);
      *
      *         // Store scanned items to output segment
      *         d_data[block_offset] = thread_data;
@@ -1303,12 +1304,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -1351,12 +1352,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -1367,7 +1368,7 @@ public:
      *     // Compute inclusive warp-wide prefix max scans
      *     int warp_id = threadIdx.x / 32;
      *     int inclusive_partial, exclusive_partial;
-     *     WarpScan(temp_storage[warp_id]).Scan(thread_data, inclusive_partial, exclusive_partial, INT_MIN, cub::Max());
+     *     WarpScan(temp_storage[warp_id]).Scan(thread_data, inclusive_partial, exclusive_partial, INT_MIN, hipcub::Max());
      *
      * \endcode
      * \par
@@ -1403,12 +1404,12 @@ public:
      * 128 threads (one per each of the 32-thread warps).
      * \par
      * \code
-     * #include <cub/cub.cuh>
+     * #include <hipcub/hipcub.hpp>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize WarpScan for type int
-     *     typedef cub::WarpScan<int> WarpScan;
+     *     typedef hipcub::WarpScan<int> WarpScan;
      *
      *     // Allocate WarpScan shared memory for 4 warps
      *     __shared__ typename WarpScan::TempStorage temp_storage[4];
@@ -1418,7 +1419,7 @@ public:
      *
      *     // Compute exclusive warp-wide prefix max scans
      *     int inclusive_partial, exclusive_partial;
-     *     WarpScan(temp_storage[warp_id]).Scan(thread_data, inclusive_partial, exclusive_partial, cub::Max());
+     *     WarpScan(temp_storage[warp_id]).Scan(thread_data, inclusive_partial, exclusive_partial, hipcub::Max());
      *
      * \endcode
      * \par

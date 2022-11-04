@@ -76,7 +76,7 @@ template <
     bool                        _MEMOIZE_OUTER_SCAN,        ///< Whether or not to buffer outer raking scan partials to incur fewer shared memory reads at the expense of higher register pressure.  See BlockScanAlgorithm::BLOCK_SCAN_RAKING_MEMOIZE for more details.
     BlockScanAlgorithm          _INNER_SCAN_ALGORITHM,      ///< The BlockScan algorithm algorithm to use
     RadixSortScatterAlgorithm   _SCATTER_ALGORITHM,         ///< The scattering strategy to use
-    cudaSharedMemConfig         _SMEM_CONFIG,               ///< Shared memory bank mode
+    hipSharedMemConfig         _SMEM_CONFIG,               ///< Shared memory bank mode
     int                         _RADIX_BITS>                ///< The number of radix bits, i.e., log2(bins)
 struct BlockRangeRadixSortDownsweepPolicy
 {
@@ -93,7 +93,7 @@ struct BlockRangeRadixSortDownsweepPolicy
     static const CacheLoadModifier          LOAD_MODIFIER           = _LOAD_MODIFIER;           ///< Cache load modifier for reading keys (and values)
     static const BlockScanAlgorithm         INNER_SCAN_ALGORITHM    = _INNER_SCAN_ALGORITHM;    ///< The BlockScan algorithm algorithm to use
     static const RadixSortScatterAlgorithm  SCATTER_ALGORITHM       = _SCATTER_ALGORITHM;       ///< The scattering strategy to use
-    static const cudaSharedMemConfig        SMEM_CONFIG             = _SMEM_CONFIG;             ///< Shared memory bank mode
+    static const hipSharedMemConfig        SMEM_CONFIG             = _SMEM_CONFIG;             ///< Shared memory bank mode
 };
 
 
@@ -126,7 +126,7 @@ struct BlockRangeRadixSortDownsweep
     static const CacheLoadModifier          LOAD_MODIFIER           = BlockRangeRadixSortDownsweepPolicy::LOAD_MODIFIER;
     static const BlockScanAlgorithm         INNER_SCAN_ALGORITHM    = BlockRangeRadixSortDownsweepPolicy::INNER_SCAN_ALGORITHM;
     static const RadixSortScatterAlgorithm  SCATTER_ALGORITHM       = BlockRangeRadixSortDownsweepPolicy::SCATTER_ALGORITHM;
-    static const cudaSharedMemConfig        SMEM_CONFIG             = BlockRangeRadixSortDownsweepPolicy::SMEM_CONFIG;
+    static const hipSharedMemConfig        SMEM_CONFIG             = BlockRangeRadixSortDownsweepPolicy::SMEM_CONFIG;
 
     enum
     {

@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRangeScan implements a stateful abstraction of CUDA thread blocks for participating in device-wide prefix scan across a range of tiles.
+ * hipcub::BlockRangeScan implements a stateful abstraction of CUDA thread blocks for participating in device-wide prefix scan across a range of tiles.
  */
 
 #pragma once
@@ -97,7 +97,7 @@ template <
     typename InputIterator,             ///< Random-access input iterator type
     typename OutputIterator,            ///< Random-access output iterator type
     typename ScanOp,                    ///< Scan functor type
-    typename Identity,                  ///< Identity element type (cub::NullType for inclusive scan)
+    typename Identity,                  ///< Identity element type (hipcub::NullType for inclusive scan)
     typename Offset>                    ///< Signed integer type for global offsets
 struct BlockRangeScan
 {

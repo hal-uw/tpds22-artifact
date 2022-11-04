@@ -61,12 +61,12 @@ namespace cub {
 
 
 /**
- * \brief %If \p CUB_STDERR is defined and \p error is not \p cudaSuccess, the corresponding error message is printed to \p stderr (or \p stdout in device code) along with the supplied source context.
+ * \brief %If \p CUB_STDERR is defined and \p error is not \p hipSuccess, the corresponding error message is printed to \p stderr (or \p stdout in device code) along with the supplied source context.
  *
  * \return The CUDA error.
  */
-__host__ __device__ __forceinline__ cudaError_t Debug(
-    cudaError_t     error,
+__host__ __device__ __forceinline__ hipError_t Debug(
+    hipError_t     error,
     const char*     filename,
     int             line)
 {
@@ -74,7 +74,7 @@ __host__ __device__ __forceinline__ cudaError_t Debug(
     if (error)
     {
     #if (CUB_PTX_ARCH == 0)
-        fprintf(stderr, "CUDA error %d [%s, %d]: %s\n", error, filename, line, cudaGetErrorString(error));
+        fprintf(stderr, "CUDA error %d [%s, %d]: %s\n", error, filename, line, hipGetErrorString(error));
         fflush(stderr);
     #elif (CUB_PTX_ARCH >= 200)
         printf("CUDA error %d [block %d, thread %d, %s, %d]\n", error, blockIdx.x, threadIdx.x, filename, line);
@@ -88,13 +88,13 @@ __host__ __device__ __forceinline__ cudaError_t Debug(
 /**
  * \brief Debug macro
  */
-#define CubDebug(e) cub::Debug((e), __FILE__, __LINE__)
+#define CubDebug(e) hipcub::Debug((e), __FILE__, __LINE__)
 
 
 /**
  * \brief Debug macro with exit
  */
-#define CubDebugExit(e) if (cub::Debug((e), __FILE__, __LINE__)) { exit(1); }
+#define CubDebugExit(e) if (hipcub::Debug((e), __FILE__, __LINE__)) { exit(1); }
 
 
 /**

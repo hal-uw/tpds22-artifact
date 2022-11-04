@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -46,7 +47,7 @@
 #include "test_util.h"
 
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -534,9 +535,9 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(T) * TILE_SIZE));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_out, sizeof(T) * (TILE_SIZE + 2)));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_aggregate, sizeof(T) * BLOCK_THREADS));
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * TILE_SIZE, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_out, 0, sizeof(T) * (TILE_SIZE + 1)));
-    CubDebugExit(cudaMemset(d_aggregate, 0, sizeof(T) * BLOCK_THREADS));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * TILE_SIZE, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_out, 0, sizeof(T) * (TILE_SIZE + 1)));
+    CubDebugExit(hipMemset(d_aggregate, 0, sizeof(T) * BLOCK_THREADS));
 
     // Display input problem data
     if (g_verbose)
@@ -551,7 +552,7 @@ void Test(
 
     // Run aggregate/prefix kernel
     dim3 block_dims(BLOCK_DIM_X, BLOCK_DIM_Y, BLOCK_DIM_Z);
-    BlockScanKernel<BLOCK_DIM_X, BLOCK_DIM_Y, BLOCK_DIM_Z, ITEMS_PER_THREAD, TEST_MODE, ALGORITHM><<<1, block_dims>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(BlockScanKernel<BLOCK_DIM_X, BLOCK_DIM_Y, BLOCK_DIM_Z, ITEMS_PER_THREAD, TEST_MODE, ALGORITHM>), dim3(1), dim3(block_dims), 0, 0, 
         d_in,
         d_out,
         d_aggregate,
@@ -560,8 +561,8 @@ void Test(
         prefix,
         d_elapsed);
 
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Copy out and display results
     printf("\tScan results: ");

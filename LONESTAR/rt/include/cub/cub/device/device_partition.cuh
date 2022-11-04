@@ -29,7 +29,7 @@
 
 /**
  * \file
- * cub::DevicePartition provides device-wide, parallel operations for partitioning sequences of data items residing within global memory.
+ * hipcub::DevicePartition provides device-wide, parallel operations for partitioning sequences of data items residing within global memory.
  */
 
 #pragma once
@@ -87,7 +87,7 @@ struct DevicePartition
      * The code snippet below illustrates the compaction of items selected from an \p int device vector.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_partition.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_partition.cuh>
      *
      * // Declare, allocate, and initialize device pointers for input, flags, and output
      * int  num_items;          // e.g., 8
@@ -100,13 +100,13 @@ struct DevicePartition
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DevicePartition::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected, num_items);
+     * hipcub::DevicePartition::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected, num_items);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run selection
-     * cub::DevicePartition::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected, num_items);
+     * hipcub::DevicePartition::Flagged(d_temp_storage, temp_storage_bytes, d_in, d_flags, d_out, d_num_selected, num_items);
      *
      * // d_out             <-- [1, 4, 6, 7, 8, 5, 3, 2]
      * // d_num_selected    <-- [4]
@@ -124,7 +124,7 @@ struct DevicePartition
         typename                    OutputIterator,
         typename                    NumSelectedIterator>
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Flagged(
+    static hipError_t Flagged(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                           ///< [in] Pointer to the input sequence of data items
@@ -132,7 +132,7 @@ struct DevicePartition
         OutputIterator              d_out,                          ///< [out] Pointer to the output sequence of partitioned data items
         NumSelectedIterator         d_num_selected,                 ///< [out] Pointer to the output total number of items selected (i.e., the offset of the unselected partition)
         int                         num_items,                      ///< [in] Total number of items to select from
-        cudaStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous  = false)     ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  May cause significant slowdown.  Default is \p false.
     {
         typedef int                     Offset;         // Signed integer type for global offsets
@@ -182,7 +182,7 @@ struct DevicePartition
      * The code snippet below illustrates the compaction of items selected from an \p int device vector.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/device/device_partition.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/device/device_partition.cuh>
      *
      * // Functor type for selecting values less than some criteria
      * struct LessThan
@@ -209,13 +209,13 @@ struct DevicePartition
      * // Determine temporary device storage requirements
      * void     *d_temp_storage = NULL;
      * size_t   temp_storage_bytes = 0;
-     * cub::DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected, num_items, select_op);
+     * hipcub::DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected, num_items, select_op);
      *
      * // Allocate temporary storage
-     * cudaMalloc(&d_temp_storage, temp_storage_bytes);
+     * hipMalloc(&d_temp_storage, temp_storage_bytes);
      *
      * // Run selection
-     * cub::DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected, num_items, select_op);
+     * hipcub::DeviceSelect::If(d_temp_storage, temp_storage_bytes, d_in, d_out, d_num_selected, num_items, select_op);
      *
      * // d_out             <-- [0, 2, 3, 5, 2, 8, 81, 9]
      * // d_num_selected    <-- [5]
@@ -233,7 +233,7 @@ struct DevicePartition
         typename                    NumSelectedIterator,
         typename                    SelectOp>
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t If(
+    static hipError_t If(
         void                        *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                      &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         InputIterator               d_in,                           ///< [in] Pointer to the input sequence of data items
@@ -241,7 +241,7 @@ struct DevicePartition
         NumSelectedIterator         d_num_selected,                 ///< [out] Pointer to the output total number of items selected (i.e., the offset of the unselected partition)
         int                         num_items,                      ///< [in] Total number of items to select from
         SelectOp                    select_op,                      ///< [in] Unary selection operator
-        cudaStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t                stream             = 0,         ///< [in] <b>[optional]</b> CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                        debug_synchronous  = false)     ///< [in] <b>[optional]</b> Whether or not to synchronize the stream after every kernel launch to check for errors.  May cause significant slowdown.  Default is \p false.
     {
         typedef int                     Offset;         // Signed integer type for global offsets

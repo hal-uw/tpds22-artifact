@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockReduce class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel reduction of items partitioned across a CUDA thread block.
+ * The hipcub::BlockReduce class provides [<em>collective</em>](index.html#sec0) methods for computing a parallel reduction of items partitioned across a CUDA thread block.
  */
 
 #pragma once
@@ -159,7 +160,7 @@ enum BlockReduceAlgorithm
  *
  * \tparam T                Data type being reduced
  * \tparam BLOCK_DIM_X      The thread block length in threads along the X dimension
- * \tparam ALGORITHM        <b>[optional]</b> cub::BlockReduceAlgorithm enumerator specifying the underlying algorithm to use (default: cub::BLOCK_REDUCE_WARP_REDUCTIONS)
+ * \tparam ALGORITHM        <b>[optional]</b> hipcub::BlockReduceAlgorithm enumerator specifying the underlying algorithm to use (default: hipcub::BLOCK_REDUCE_WARP_REDUCTIONS)
  * \tparam BLOCK_DIM_Y      <b>[optional]</b> The thread block length in threads along the Y dimension (default: 1)
  * \tparam BLOCK_DIM_Z      <b>[optional]</b> The thread block length in threads along the Z dimension (default: 1)
  * \tparam PTX_ARCH         <b>[optional]</b> \ptxversion
@@ -169,9 +170,9 @@ enum BlockReduceAlgorithm
  *   uses a binary combining operator to compute a single aggregate from a list of input elements.
  * - \rowmajor
  * - BlockReduce can be optionally specialized by algorithm to accommodate different latency/throughput workload profiles:
- *   -# <b>cub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY</b>.  An efficient "raking" reduction algorithm that only supports commutative reduction operators. [More...](\ref cub::BlockReduceAlgorithm)
- *   -# <b>cub::BLOCK_REDUCE_RAKING</b>.  An efficient "raking" reduction algorithm that supports commutative and non-commutative reduction operators. [More...](\ref cub::BlockReduceAlgorithm)
- *   -# <b>cub::BLOCK_REDUCE_WARP_REDUCTIONS</b>.  A quick "tiled warp-reductions" reduction algorithm that supports commutative and non-commutative reduction operators. [More...](\ref cub::BlockReduceAlgorithm)
+ *   -# <b>hipcub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY</b>.  An efficient "raking" reduction algorithm that only supports commutative reduction operators. [More...](\ref hipcub::BlockReduceAlgorithm)
+ *   -# <b>hipcub::BLOCK_REDUCE_RAKING</b>.  An efficient "raking" reduction algorithm that supports commutative and non-commutative reduction operators. [More...](\ref hipcub::BlockReduceAlgorithm)
+ *   -# <b>hipcub::BLOCK_REDUCE_WARP_REDUCTIONS</b>.  A quick "tiled warp-reductions" reduction algorithm that supports commutative and non-commutative reduction operators. [More...](\ref hipcub::BlockReduceAlgorithm)
  *
  * \par Performance Considerations
  * - \granularity
@@ -181,7 +182,7 @@ enum BlockReduceAlgorithm
  *   - Summation (<b><em>vs.</em></b> generic reduction)
  *   - \p BLOCK_THREADS is a multiple of the architecture's warp size
  *   - Every thread has a valid input (i.e., full <b><em>vs.</em></b> partial-tiles)
- * - See cub::BlockReduceAlgorithm for performance details regarding algorithmic alternatives
+ * - See hipcub::BlockReduceAlgorithm for performance details regarding algorithmic alternatives
  *
  * \par A Simple Example
  * \blockcollective{BlockReduce}
@@ -191,12 +192,12 @@ enum BlockReduceAlgorithm
  * where each thread owns 4 consecutive items.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize BlockReduce for a 1D block of 128 threads on type int
- *     typedef cub::BlockReduce<int, 128> BlockReduce;
+ *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
  *
  *     // Allocate shared memory for BlockReduce
  *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -323,12 +324,12 @@ public:
      * are partitioned across 128 threads.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -338,16 +339,16 @@ public:
      *     ...
      *
      *     // Compute the block-wide max for thread0
-     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, cub::Max());
+     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, hipcub::Max());
      *
      * \endcode
      *
-     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
+     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
      */
     template <typename ReductionOp>
     __device__ __forceinline__ T Reduce(
         T               input,                      ///< [in] Calling thread's input
-        ReductionOp     reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+        ReductionOp     reduction_op)               ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
     {
         return InternalBlockReduce(temp_storage).template Reduce<true>(input, BLOCK_THREADS, reduction_op);
     }
@@ -367,12 +368,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -382,19 +383,19 @@ public:
      *     ...
      *
      *     // Compute the block-wide max for thread0
-     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, cub::Max());
+     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, hipcub::Max());
      *
      * \endcode
      *
      * \tparam ITEMS_PER_THREAD     <b>[inferred]</b> The number of consecutive items partitioned onto each thread.
-     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
+     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
      */
     template <
         int ITEMS_PER_THREAD,
         typename ReductionOp>
     __device__ __forceinline__ T Reduce(
         T               (&inputs)[ITEMS_PER_THREAD],    ///< [in] Calling thread's input segment
-        ReductionOp     reduction_op)                   ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+        ReductionOp     reduction_op)                   ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
     {
         // Reduce partials
         T partial = ThreadReduce(inputs, reduction_op);
@@ -415,12 +416,12 @@ public:
      * are partitioned across 128 threads.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(int num_valid, ...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -430,16 +431,16 @@ public:
      *     if (threadIdx.x < num_valid) thread_data = ...
      *
      *     // Compute the block-wide max for thread0
-     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, cub::Max(), num_valid);
+     *     int aggregate = BlockReduce(temp_storage).Reduce(thread_data, hipcub::Max(), num_valid);
      *
      * \endcode
      *
-     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
+     * \tparam ReductionOp          <b>[inferred]</b> Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.) type having member <tt>T operator()(const T &a, const T &b)</tt>
      */
     template <typename ReductionOp>
     __device__ __forceinline__ T Reduce(
         T                   input,                  ///< [in] Calling thread's input
-        ReductionOp         reduction_op,           ///< [in] Binary reduction functor (e.g., an instance of cub::Sum, cub::Min, cub::Max, etc.)
+        ReductionOp         reduction_op,           ///< [in] Binary reduction functor (e.g., an instance of hipcub::Sum, hipcub::Min, hipcub::Max, etc.)
         int                 num_valid)              ///< [in] Number of threads containing valid elements (may be less than BLOCK_THREADS)
     {
         // Determine if we scan skip bounds checking
@@ -474,12 +475,12 @@ public:
      * are partitioned across 128 threads.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -514,12 +515,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;
@@ -540,7 +541,7 @@ public:
         T   (&inputs)[ITEMS_PER_THREAD])    ///< [in] Calling thread's input segment
     {
         // Reduce partials
-        T partial = ThreadReduce(inputs, cub::Sum());
+        T partial = ThreadReduce(inputs, hipcub::Sum());
         return Sum(partial);
     }
 
@@ -558,12 +559,12 @@ public:
      * are partitioned across 128 threads.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_reduce.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_reduce.cuh>
      *
      * __global__ void ExampleKernel(int num_valid, ...)
      * {
      *     // Specialize BlockReduce for a 1D block of 128 threads on type int
-     *     typedef cub::BlockReduce<int, 128> BlockReduce;
+     *     typedef hipcub::BlockReduce<int, 128> BlockReduce;
      *
      *     // Allocate shared memory for BlockReduce
      *     __shared__ typename BlockReduce::TempStorage temp_storage;

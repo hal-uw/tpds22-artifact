@@ -26,17 +26,17 @@ struct ThreadWork {
 
 	void compute_prefix_sum() {
 
-		cub::CachingDeviceAllocator g_allocator(true);  // Caching allocator for device memory
+		hipcub::CachingDeviceAllocator g_allocator(true);  // Caching allocator for device memory
 		// Determine temporary device storage requirements for inclusive prefix sum
 		void     *d_temp_storage = NULL;
 		size_t   temp_storage_bytes = 0;
 
-		cub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, thread_work_wl.in_wl().dwl,
+		hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, thread_work_wl.in_wl().dwl,
 				thread_prefix_work_wl.gpu_wr_ptr(), thread_work_wl.in_wl().nitems());
 		// Allocate temporary storage for inclusive prefix sum
 		CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 		// Run inclusive prefix sum
-		cub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, thread_work_wl.in_wl().dwl,
+		hipcub::DeviceScan::InclusiveSum(d_temp_storage, temp_storage_bytes, thread_work_wl.in_wl().dwl,
 				thread_prefix_work_wl.gpu_wr_ptr(), thread_work_wl.in_wl().nitems());
 	}
 

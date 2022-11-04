@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include "cutil_subset.h"
 
 /**
@@ -57,7 +57,7 @@ protected :
 	__device__ __forceinline__ SyncFlag LoadCG(SyncFlag* d_ptr) const
 	{
 		SyncFlag retval;
-		retval = cub::ThreadLoad<cub::LOAD_CG>(d_ptr);
+		retval = hipcub::ThreadLoad<hipcub::LOAD_CG>(d_ptr);
 		return retval;
 	}
 
@@ -146,11 +146,11 @@ public:
 	/**
 	 * Deallocates and resets the progress counters
 	 */
-	cudaError_t HostReset()
+	hipError_t HostReset()
 	{
-		cudaError_t retval = cudaSuccess;
+		hipError_t retval = hipSuccess;
 		if (d_sync) {
-			CUDA_SAFE_CALL(cudaFree(d_sync));
+			CUDA_SAFE_CALL(hipFree(d_sync));
 			d_sync = NULL;
 		}
 		sync_bytes = 0;
@@ -171,25 +171,25 @@ public:
 	 * Sets up the progress counters for the next kernel launch (lazily
 	 * allocating and initializing them if necessary)
 	 */
-	cudaError_t Setup(int sweep_grid_size)
+	hipError_t Setup(int sweep_grid_size)
 	{
-		cudaError_t retval = cudaSuccess;
+		hipError_t retval = hipSuccess;
 		do {
 			size_t new_sync_bytes = sweep_grid_size * sizeof(SyncFlag);
 			if (new_sync_bytes > sync_bytes) {
 
 				if (d_sync) {
-					CUDA_SAFE_CALL(cudaFree(d_sync));
-					retval = cudaSuccess;
+					CUDA_SAFE_CALL(hipFree(d_sync));
+					retval = hipSuccess;
 				}
 
 				sync_bytes = new_sync_bytes;
 
-				CUDA_SAFE_CALL(cudaMalloc((void**) &d_sync, sync_bytes));
-				retval = cudaSuccess;
+				CUDA_SAFE_CALL(hipMalloc((void**) &d_sync, sync_bytes));
+				retval = hipSuccess;
 
 				// Initialize to zero
-				CUDA_SAFE_CALL(cudaMemset(d_sync, 0, sweep_grid_size * sizeof(SyncFlag)));
+				CUDA_SAFE_CALL(hipMemset(d_sync, 0, sweep_grid_size * sizeof(SyncFlag)));
 
 			}
 		} while (0);

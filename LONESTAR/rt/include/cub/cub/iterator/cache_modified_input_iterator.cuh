@@ -81,13 +81,13 @@ namespace cub {
  * (i.e., load values through texture cache).
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/cache_modified_input_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/cache_modified_input_iterator.cuh>
  *
  * // Declare, allocate, and initialize a device array
  * double *d_in;            // e.g., [8.0, 6.0, 7.0, 5.0, 3.0, 0.0, 9.0]
  *
  * // Create an iterator wrapper
- * cub::CacheModifiedInputIterator<cub::LOAD_LDG, double> itr(d_in);
+ * hipcub::CacheModifiedInputIterator<hipcub::LOAD_LDG, double> itr(d_in);
  *
  * // Within device code:
  * printf("%f\n", itr[0]);  // 8.0
@@ -96,7 +96,7 @@ namespace cub {
  *
  * \endcode
  *
- * \tparam CacheLoadModifier    The cub::CacheLoadModifier to use when accessing data
+ * \tparam CacheLoadModifier    The hipcub::CacheLoadModifier to use when accessing data
  * \tparam ValueType            The value type of this iterator
  * \tparam Offset               The difference type of this iterator (Default: \p ptrdiff_t)
  */

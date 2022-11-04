@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -39,7 +40,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -69,7 +70,7 @@ __global__ void Kernel(
  */
 int main(int argc, char** argv)
 {
-    cudaError_t retval = cudaSuccess;
+    hipError_t retval = hipSuccess;
 
     // Defaults
     int iterations = 10000;
@@ -101,7 +102,7 @@ int main(int argc, char** argv)
 
     // Get device ordinal
     int device_ordinal;
-    CubDebugExit(cudaGetDevice(&device_ordinal));
+    CubDebugExit(hipGetDevice(&device_ordinal));
 
     // Get device SM version
     int sm_version;
@@ -109,7 +110,7 @@ int main(int argc, char** argv)
 
     // Get SM count
     int sm_count;
-    CubDebugExit(cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, device_ordinal));
+    CubDebugExit(hipDeviceGetAttribute(&sm_count, hipDeviceAttributeMultiprocessorCount, device_ordinal));
 
     // Compute grid size and occupancy
     int occupancy = CUB_MIN(
@@ -136,10 +137,10 @@ int main(int argc, char** argv)
     // Time kernel
     GpuTimer gpu_timer;
     gpu_timer.Start();
-    Kernel<<<grid_size, block_size>>>(global_barrier, iterations);
+    hipLaunchKernelGGL(Kernel, dim3(grid_size), dim3(block_size), 0, 0, global_barrier, iterations);
     gpu_timer.Stop();
 
-    retval = CubDebug(cudaThreadSynchronize());
+    retval = CubDebug(hipDeviceSynchronize());
 
     // Output timing results
     float avg_elapsed = gpu_timer.ElapsedMillis() / float(iterations);

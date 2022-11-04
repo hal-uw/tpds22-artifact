@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::GridMappingStrategy enumerates alternative strategies for mapping constant-sized tiles of device-wide data onto a grid of CUDA thread blocks.
+ * hipcub::GridMappingStrategy enumerates alternative strategies for mapping constant-sized tiles of device-wide data onto a grid of CUDA thread blocks.
  */
 
 #pragma once
@@ -54,7 +54,7 @@ namespace cub {
 
 
 /**
- * \brief cub::GridMappingStrategy enumerates alternative strategies for mapping constant-sized tiles of device-wide data onto a grid of CUDA thread blocks.
+ * \brief hipcub::GridMappingStrategy enumerates alternative strategies for mapping constant-sized tiles of device-wide data onto a grid of CUDA thread blocks.
  */
 enum GridMappingStrategy
 {

@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 #include "../util_ptx.cuh"
 #include "../util_type.cuh"
@@ -75,32 +75,32 @@ enum CacheStoreModifier
  */
 
 /**
- * \brief Thread utility for writing memory using cub::CacheStoreModifier cache modifiers.  Can be used to store any data type.
+ * \brief Thread utility for writing memory using hipcub::CacheStoreModifier cache modifiers.  Can be used to store any data type.
  *
  * \par Example
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/thread/thread_store.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/thread/thread_store.cuh>
  *
  * // 32-bit store using cache-global modifier:
  * int *d_out;
  * int val;
- * cub::ThreadStore<cub::STORE_CG>(d_out + threadIdx.x, val);
+ * hipcub::ThreadStore<hipcub::STORE_CG>(d_out + threadIdx.x, val);
  *
  * // 16-bit store using default modifier
  * short *d_out;
  * short val;
- * cub::ThreadStore<cub::STORE_DEFAULT>(d_out + threadIdx.x, val);
+ * hipcub::ThreadStore<hipcub::STORE_DEFAULT>(d_out + threadIdx.x, val);
  *
  * // 256-bit store using write-through modifier
  * double4 *d_out;
  * double4 val;
- * cub::ThreadStore<cub::STORE_WT>(d_out + threadIdx.x, val);
+ * hipcub::ThreadStore<hipcub::STORE_WT>(d_out + threadIdx.x, val);
  *
  * // 96-bit store using cache-streaming cache modifier
  * struct TestFoo { bool a; short b; };
  * TestFoo *d_struct;
  * TestFoo val;
- * cub::ThreadStore<cub::STORE_CS>(d_out + threadIdx.x, val);
+ * hipcub::ThreadStore<hipcub::STORE_CS>(d_out + threadIdx.x, val);
  * \endcode
  *
  * \tparam MODIFIER             <b>[inferred]</b> CacheStoreModifier enumeration

@@ -47,7 +47,7 @@
 
 #include "../../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     Initialize(h_in, num_items, max_segment);
     int num_selected = Solve(h_in, h_reference, num_items);
 
-    printf("cub::DeviceSelect::Unique %d items (%d-byte elements), %d selected (avg run length %d)\n",
+    printf("hipcub::DeviceSelect::Unique %d items (%d-byte elements), %d selected (avg run length %d)\n",
         num_items, (int) sizeof(int), num_selected, num_items / num_selected);
     fflush(stdout);
 
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_in, sizeof(int) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(int) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(int) * num_items, hipMemcpyHostToDevice));
 
     // Allocate device output array and num selected
     int     *d_out            = NULL;

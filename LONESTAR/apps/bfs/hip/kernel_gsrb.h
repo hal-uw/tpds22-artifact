@@ -9,7 +9,8 @@
 #include "mgpucontext.h"
 #include "mgpuutil.h"
 #include <hipcub/hipcub.hpp>
-//#include "cub/util_allocator.cuh"
+#include "cub/util_allocator.cuh"
+//#include <hipcub/util_allocator.hpp>
 #include "thread_work.h"
 
 __device__ __forceinline__ bool ld_gbl_cg (const bool *addr)
@@ -416,7 +417,7 @@ __device__ void bfs_kernel_dev(CSRGraph graph, int LEVEL, bool enable_lb, Workli
   const int ITSIZE = BLKSIZE * 8;
   unsigned d_limit = DEGREE_LIMIT;
 
-  typedef hipcub::BlockScan<multiple_sum<2, index_type>, BLKSIZE> BlockScan;
+  typedef cub::BlockScan<multiple_sum<2, index_type>, BLKSIZE> BlockScan;
   typedef union np_shared<BlockScan::TempStorage, index_type, struct tb_np, struct warp_np<__kernel_tb_size/32>, struct fg_np<ITSIZE> > npsTy;
 
   __shared__ npsTy nps ;

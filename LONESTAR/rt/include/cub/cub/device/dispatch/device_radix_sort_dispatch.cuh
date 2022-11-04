@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
@@ -29,7 +30,7 @@
 
 /**
  * \file
- * cub::DeviceRadixSort provides device-wide, parallel operations for computing a radix sort across a sequence of data items residing within global memory.
+ * hipcub::DeviceRadixSort provides device-wide, parallel operations for computing a radix sort across a sequence of data items residing within global memory.
  */
 
 #pragma once
@@ -104,7 +105,7 @@ __global__ void RadixSortUpsweepKernel(
  * Spine scan kernel entry point (single-block).  Computes an exclusive prefix sum over the privatized digit histograms
  */
 template <
-    typename    BlockRangeScanPolicy,       ///< Parameterizable tuning policy type for cub::BlockRangeScan abstraction
+    typename    BlockRangeScanPolicy,       ///< Parameterizable tuning policy type for hipcub::BlockRangeScan abstraction
     typename    Offset>                     ///< Signed integer type for global offsets
 __launch_bounds__ (int(BlockRangeScanPolicy::BLOCK_THREADS), 1)
 __global__ void RadixSortScanKernel(
@@ -112,7 +113,7 @@ __global__ void RadixSortScanKernel(
     int         num_counts)                 ///< [in] Total number of bin-counts
 {
     // Parameterize the BlockRangeScan type for the current configuration
-    typedef BlockRangeScan<BlockRangeScanPolicy, Offset*, Offset*, cub::Sum, Offset, Offset> BlockRangeScanT;
+    typedef BlockRangeScan<BlockRangeScanPolicy, Offset*, Offset*, hipcub::Sum, Offset, Offset> BlockRangeScanT;
 
     // Shared memory storage
     __shared__ typename BlockRangeScanT::TempStorage temp_storage;
@@ -120,7 +121,7 @@ __global__ void RadixSortScanKernel(
     if (blockIdx.x > 0) return;
 
     // Block scan instance
-    BlockRangeScanT block_scan(temp_storage, d_spine, d_spine, cub::Sum(), Offset(0)) ;
+    BlockRangeScanT block_scan(temp_storage, d_spine, d_spine, hipcub::Sum(), Offset(0)) ;
 
     // Process full input tiles
     int block_offset = 0;
@@ -137,7 +138,7 @@ __global__ void RadixSortScanKernel(
  * Downsweep pass kernel entry point (multi-block).  Scatters keys (and values) into corresponding bins for the current digit place.
  */
 template <
-    typename                BlockRangeRadixSortDownsweepPolicy,     ///< Parameterizable tuning policy type for cub::BlockRangeRadixSortUpsweep abstraction
+    typename                BlockRangeRadixSortDownsweepPolicy,     ///< Parameterizable tuning policy type for hipcub::BlockRangeRadixSortUpsweep abstraction
     bool                    DESCENDING,                             ///< Whether or not the sorted-order is high-to-low
     typename                Key,                                    ///< Key type
     typename                Value,                                  ///< Value type
@@ -214,13 +215,13 @@ struct DeviceRadixSortDispatch
         typedef BlockRangeScanPolicy <1024, 4, BLOCK_LOAD_VECTORIZE, false, LOAD_DEFAULT, BLOCK_STORE_VECTORIZE, false, BLOCK_SCAN_WARP_SCANS> ScanPolicy;
 
         // Primary DownsweepPolicy
-        typedef BlockRangeRadixSortDownsweepPolicy <64,   CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <64,   CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, DownsweepPolicyKeys, DownsweepPolicyPairs>::Type DownsweepPolicy;
 
         // Alternate DownsweepPolicy for (RADIX_BITS-1)-bit passes
-        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 11 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 11 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128,  CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_DIRECT, LOAD_LDG, false, true, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, AltDownsweepPolicyKeys, AltDownsweepPolicyPairs>::Type AltDownsweepPolicy;
     };
 
@@ -248,13 +249,13 @@ struct DeviceRadixSortDispatch
         typedef BlockRangeScanPolicy <1024, 4, BLOCK_LOAD_VECTORIZE, false, LOAD_DEFAULT, BLOCK_STORE_VECTORIZE, false, BLOCK_SCAN_RAKING_MEMOIZE> ScanPolicy;
 
         // DownsweepPolicy
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 14 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 10 / SCALE_FACTOR), BLOCK_LOAD_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 14 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 10 / SCALE_FACTOR), BLOCK_LOAD_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS> DownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, DownsweepPolicyKeys, DownsweepPolicyPairs>::Type DownsweepPolicy;
 
         // Alternate DownsweepPolicy for (RADIX_BITS-1)-bit passes
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 14 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 10 / SCALE_FACTOR), BLOCK_LOAD_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 14 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 10 / SCALE_FACTOR), BLOCK_LOAD_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeEightByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, AltDownsweepPolicyKeys, AltDownsweepPolicyPairs>::Type AltDownsweepPolicy;
     };
 
@@ -282,13 +283,13 @@ struct DeviceRadixSortDispatch
         typedef BlockRangeScanPolicy <512, 4, BLOCK_LOAD_VECTORIZE, false, LOAD_DEFAULT, BLOCK_STORE_VECTORIZE, false, BLOCK_SCAN_RAKING_MEMOIZE> ScanPolicy;
 
         // DownsweepPolicy
-        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 13 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 13 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, DownsweepPolicyKeys, DownsweepPolicyPairs>::Type DownsweepPolicy;
 
         // Alternate DownsweepPolicy for (RADIX_BITS-1)-bit passes
-        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 13 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 18 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 13 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, AltDownsweepPolicyKeys, AltDownsweepPolicyPairs>::Type AltDownsweepPolicy;
     };
 
@@ -316,13 +317,13 @@ struct DeviceRadixSortDispatch
         typedef BlockRangeScanPolicy <256, 4, BLOCK_LOAD_VECTORIZE, false, LOAD_DEFAULT, BLOCK_STORE_VECTORIZE, false, BLOCK_SCAN_WARP_SCANS> ScanPolicy;
 
         // DownsweepPolicy
-        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 19 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 19 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 19 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, CUB_MAX(1, 19 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, DownsweepPolicyKeys, DownsweepPolicyPairs>::Type DownsweepPolicy;
 
         // Alternate DownsweepPolicy for (RADIX_BITS-1)-bit passes
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
-        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyKeys;
+        typedef BlockRangeRadixSortDownsweepPolicy <128, CUB_MAX(1, 15 / SCALE_FACTOR), BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicyPairs;
         typedef typename If<KEYS_ONLY, AltDownsweepPolicyKeys, AltDownsweepPolicyPairs>::Type AltDownsweepPolicy;
     };
 
@@ -344,10 +345,10 @@ struct DeviceRadixSortDispatch
         typedef BlockRangeScanPolicy <256, 4, BLOCK_LOAD_VECTORIZE, false, LOAD_DEFAULT, BLOCK_STORE_VECTORIZE, false, BLOCK_SCAN_RAKING_MEMOIZE> ScanPolicy;
 
         // DownsweepPolicy
-        typedef BlockRangeRadixSortDownsweepPolicy <64, 9, BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicy;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, 9, BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS> DownsweepPolicy;
 
         // Alternate DownsweepPolicy for (RADIX_BITS-1)-bit passes
-        typedef BlockRangeRadixSortDownsweepPolicy <64, 9, BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, cudaSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicy;
+        typedef BlockRangeRadixSortDownsweepPolicy <64, 9, BLOCK_LOAD_WARP_TRANSPOSE, LOAD_DEFAULT, false, false, BLOCK_SCAN_WARP_SCANS, RADIX_SORT_SCATTER_TWO_PHASE, hipSharedMemBankSizeFourByte, RADIX_BITS - 1> AltDownsweepPolicy;
     };
 
 
@@ -390,11 +391,11 @@ struct DeviceRadixSortDispatch
     template <
         typename Policy,
         typename KernelConfig,
-        typename UpsweepKernelPtr,          ///< Function type of cub::RadixSortUpsweepKernel
-        typename ScanKernelPtr,            ///< Function type of cub::SpineScanKernel
-        typename DownsweepKernelPtr>        ///< Function type of cub::RadixSortUpsweepKernel
+        typename UpsweepKernelPtr,          ///< Function type of hipcub::RadixSortUpsweepKernel
+        typename ScanKernelPtr,            ///< Function type of hipcub::SpineScanKernel
+        typename DownsweepKernelPtr>        ///< Function type of hipcub::RadixSortUpsweepKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t InitConfigs(
+    static hipError_t InitConfigs(
         int                     sm_version,
         int                     sm_count,
         KernelConfig            &upsweep_config,
@@ -408,7 +409,7 @@ struct DeviceRadixSortDispatch
         DownsweepKernelPtr      downsweep_kernel,
         DownsweepKernelPtr      alt_downsweep_kernel)
     {
-        cudaError_t error;
+        hipError_t error;
         do {
             if (CubDebug(error = upsweep_config.template         InitUpsweepPolicy<typename Policy::UpsweepPolicy>(         sm_version, sm_count, upsweep_kernel))) break;
             if (CubDebug(error = alt_upsweep_config.template     InitUpsweepPolicy<typename Policy::AltUpsweepPolicy>(      sm_version, sm_count, alt_upsweep_kernel))) break;
@@ -427,11 +428,11 @@ struct DeviceRadixSortDispatch
      */
     template <
         typename KernelConfig,
-        typename UpsweepKernelPtr,          ///< Function type of cub::RadixSortUpsweepKernel
-        typename ScanKernelPtr,            ///< Function type of cub::SpineScanKernel
-        typename DownsweepKernelPtr>        ///< Function type of cub::RadixSortUpsweepKernel
+        typename UpsweepKernelPtr,          ///< Function type of hipcub::RadixSortUpsweepKernel
+        typename ScanKernelPtr,            ///< Function type of hipcub::SpineScanKernel
+        typename DownsweepKernelPtr>        ///< Function type of hipcub::RadixSortUpsweepKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t InitConfigs(
+    static hipError_t InitConfigs(
         int                     ptx_version,
         int                     sm_version,
         int                     sm_count,
@@ -449,7 +450,7 @@ struct DeviceRadixSortDispatch
     #if (CUB_PTX_ARCH > 0)
 
         // We're on the device, so initialize the kernel dispatch configurations with the current PTX policy
-        cudaError_t error;
+        hipError_t error;
         do {
 
             if (CubDebug(error = upsweep_config.template InitUpsweepPolicy<PtxUpsweepPolicy>(               sm_version, sm_count, upsweep_kernel))) break;
@@ -465,7 +466,7 @@ struct DeviceRadixSortDispatch
     #else
 
         // We're on the host, so lookup and initialize the kernel dispatch configurations with the policies that match the device's PTX version
-        cudaError_t error;
+        hipError_t error;
         if (ptx_version >= 350)
         {
             error = InitConfigs<Policy350>(sm_version, sm_count, upsweep_config, alt_upsweep_config, scan_config, downsweep_config, alt_downsweep_config, upsweep_kernel, alt_upsweep_kernel, scan_kernel, downsweep_kernel, alt_downsweep_kernel);
@@ -502,22 +503,22 @@ struct DeviceRadixSortDispatch
         int                     block_threads;
         int                     items_per_thread;
         int                     tile_size;
-        cudaSharedMemConfig     smem_config;
+        hipSharedMemConfig     smem_config;
         int                     radix_bits;
         int                     sm_occupancy;       // Amount of CTAs to oversubscribe the device beyond actively-resident (heuristic)
         int                     max_grid_size;
         int                     subscription_factor;
 
         template <typename UpsweepPolicy, typename UpsweepKernelPtr>
-        CUB_RUNTIME_FUNCTION __forceinline__ cudaError_t InitUpsweepPolicy(
+        CUB_RUNTIME_FUNCTION __forceinline__ hipError_t InitUpsweepPolicy(
             int sm_version, int sm_count, UpsweepKernelPtr upsweep_kernel)
         {
             block_threads               = UpsweepPolicy::BLOCK_THREADS;
             items_per_thread            = UpsweepPolicy::ITEMS_PER_THREAD;
             radix_bits                  = UpsweepPolicy::RADIX_BITS;
-            smem_config                 = cudaSharedMemBankSizeFourByte;
+            smem_config                 = hipSharedMemBankSizeFourByte;
             tile_size                   = block_threads * items_per_thread;
-            cudaError_t retval          = MaxSmOccupancy(sm_occupancy, sm_version, upsweep_kernel, block_threads);
+            hipError_t retval          = MaxSmOccupancy(sm_occupancy, sm_version, upsweep_kernel, block_threads);
             subscription_factor         = CUB_SUBSCRIPTION_FACTOR(sm_version);
             max_grid_size               = (sm_occupancy * sm_count) * subscription_factor;
 
@@ -525,23 +526,23 @@ struct DeviceRadixSortDispatch
         }
 
         template <typename ScanPolicy, typename ScanKernelPtr>
-        CUB_RUNTIME_FUNCTION __forceinline__ cudaError_t InitScanPolicy(
+        CUB_RUNTIME_FUNCTION __forceinline__ hipError_t InitScanPolicy(
             int sm_version, int sm_count, ScanKernelPtr scan_kernel)
         {
             block_threads               = ScanPolicy::BLOCK_THREADS;
             items_per_thread            = ScanPolicy::ITEMS_PER_THREAD;
             radix_bits                  = 0;
-            smem_config                 = cudaSharedMemBankSizeFourByte;
+            smem_config                 = hipSharedMemBankSizeFourByte;
             tile_size                   = block_threads * items_per_thread;
             sm_occupancy                = 1;
             subscription_factor         = 1;
             max_grid_size               = 1;
 
-            return cudaSuccess;
+            return hipSuccess;
         }
 
         template <typename DownsweepPolicy, typename DownsweepKernelPtr>
-        CUB_RUNTIME_FUNCTION __forceinline__ cudaError_t InitDownsweepPolicy(
+        CUB_RUNTIME_FUNCTION __forceinline__ hipError_t InitDownsweepPolicy(
             int sm_version, int sm_count, DownsweepKernelPtr downsweep_kernel)
         {
             block_threads               = DownsweepPolicy::BLOCK_THREADS;
@@ -549,7 +550,7 @@ struct DeviceRadixSortDispatch
             radix_bits                  = DownsweepPolicy::RADIX_BITS;
             smem_config                 = DownsweepPolicy::SMEM_CONFIG;
             tile_size                   = block_threads * items_per_thread;
-            cudaError_t retval          = MaxSmOccupancy(sm_occupancy, sm_version, downsweep_kernel, block_threads);
+            hipError_t retval          = MaxSmOccupancy(sm_occupancy, sm_version, downsweep_kernel, block_threads);
             subscription_factor         = CUB_SUBSCRIPTION_FACTOR(sm_version);
             max_grid_size               = (sm_occupancy * sm_count) * subscription_factor;
 
@@ -563,14 +564,14 @@ struct DeviceRadixSortDispatch
      ******************************************************************************/
 
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t AllocateTemporaries(
+    static hipError_t AllocateTemporaries(
         void                    *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                  &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         Offset*                 &d_spine,                       ///< [out] Digit count histograms per thread block
         KernelConfig            &scan_config,                   ///< [in] Dispatch parameters that match the policy that \p scan_kernel was compiled for
         KernelConfig            &downsweep_config)              ///< [in] Dispatch parameters that match the policy that \p downsweep_kernel was compiled for
     {
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get spine size (conservative)
@@ -588,7 +589,7 @@ struct DeviceRadixSortDispatch
 
             // Return if the caller is simply requesting the size of the storage allocation
             if (d_temp_storage == NULL)
-                return cudaSuccess;
+                return hipSuccess;
 
             // Alias the allocation for the privatized per-block digit histograms
             d_spine = (Offset*) allocations[0];
@@ -608,11 +609,11 @@ struct DeviceRadixSortDispatch
      * specified kernel functions.
      */
     template <
-        typename                UpsweepKernelPtr,               ///< Function type of cub::RadixSortUpsweepKernel
-        typename                ScanKernelPtr,                  ///< Function type of cub::SpineScanKernel
-        typename                DownsweepKernelPtr>             ///< Function type of cub::RadixSortUpsweepKernel
+        typename                UpsweepKernelPtr,               ///< Function type of hipcub::RadixSortUpsweepKernel
+        typename                ScanKernelPtr,                  ///< Function type of hipcub::SpineScanKernel
+        typename                DownsweepKernelPtr>             ///< Function type of hipcub::RadixSortUpsweepKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         DoubleBuffer<Key>       &d_keys,                        ///< [in,out] Double-buffer whose current buffer contains the unsorted input keys and, upon return, is updated to point to the sorted output keys
         DoubleBuffer<Value>     &d_values,                      ///< [in,out] Double-buffer whose current buffer contains the unsorted input values and, upon return, is updated to point to the sorted output values
         Offset                  *d_spine,                       ///< [in] Digit count histograms per thread block
@@ -620,23 +621,23 @@ struct DeviceRadixSortDispatch
         Offset                  num_items,                      ///< [in] Number of items to reduce
         int                     begin_bit,                      ///< [in] The beginning (least-significant) bit index needed for key comparison
         int                     end_bit,                        ///< [in] The past-the-end (most-significant) bit index needed for key comparison
-        cudaStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                    debug_synchronous,              ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
         KernelConfig            &upsweep_config,                ///< [in] Dispatch parameters that match the policy that \p upsweep_kernel was compiled for
         KernelConfig            &scan_config,                   ///< [in] Dispatch parameters that match the policy that \p scan_kernel was compiled for
         KernelConfig            &downsweep_config,              ///< [in] Dispatch parameters that match the policy that \p downsweep_kernel was compiled for
-        UpsweepKernelPtr        upsweep_kernel,                 ///< [in] Kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
-        ScanKernelPtr           scan_kernel,                    ///< [in] Kernel function pointer to parameterization of cub::SpineScanKernel
-        DownsweepKernelPtr      downsweep_kernel)               ///< [in] Kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
+        UpsweepKernelPtr        upsweep_kernel,                 ///< [in] Kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
+        ScanKernelPtr           scan_kernel,                    ///< [in] Kernel function pointer to parameterization of hipcub::SpineScanKernel
+        DownsweepKernelPtr      downsweep_kernel)               ///< [in] Kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
     {
 #ifndef CUB_RUNTIME_ENABLED
 
         // Kernel launch not supported from this device
-        return CubDebug(cudaErrorNotSupported );
+        return CubDebug(hipErrorNotSupported );
 
 #else
 
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
         do
         {
             // Get even-share work distribution descriptor
@@ -644,9 +645,9 @@ struct DeviceRadixSortDispatch
 
 #if (CUB_PTX_ARCH == 0)
             // Get current smem bank configuration
-            cudaSharedMemConfig original_smem_config;
-            if (CubDebug(error = cudaDeviceGetSharedMemConfig(&original_smem_config))) break;
-            cudaSharedMemConfig current_smem_config = original_smem_config;
+            hipSharedMemConfig original_smem_config;
+            if (CubDebug(error = hipDeviceGetSharedMemConfig(&original_smem_config))) break;
+            hipSharedMemConfig current_smem_config = original_smem_config;
 #endif
             // Iterate over digit places
             int current_bit = begin_bit;
@@ -658,18 +659,18 @@ struct DeviceRadixSortDispatch
                 // Update smem config if necessary
                 if (current_smem_config != upsweep_config.smem_config)
                 {
-                    if (CubDebug(error = cudaDeviceSetSharedMemConfig(upsweep_config.smem_config))) break;
+                    if (CubDebug(error = hipDeviceSetSharedMemConfig(upsweep_config.smem_config))) break;
                     current_smem_config = upsweep_config.smem_config;
                 }
 #endif
 
                 // Log upsweep_kernel configuration
                 if (debug_synchronous)
-                    CubLog("Invoking upsweep_kernel<<<%d, %d, 0, %lld>>>(), %d smem config, %d items per thread, %d SM occupancy, selector %d, current bit %d, bit_grain %d\n",
+                    CubLog("Invoking hipLaunchKernelGGL(upsweep_kernel, dim3(%d), dim3(%d), 0, %lld), %d smem config, %d items per thread, %d SM occupancy, selector %d, current bit %d, bit_grain %d\n",
                     even_share.grid_size, upsweep_config.block_threads, (long long) stream, upsweep_config.smem_config, upsweep_config.items_per_thread, upsweep_config.sm_occupancy, d_keys.selector, current_bit, downsweep_config.radix_bits);
 
                 // Invoke upsweep_kernel with same grid size as downsweep_kernel
-                upsweep_kernel<<<even_share.grid_size, upsweep_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(upsweep_kernel, dim3(even_share.grid_size), dim3(upsweep_config.block_threads), 0, stream, 
                     d_keys.d_buffers[d_keys.selector],
                     d_spine,
                     num_items,
@@ -679,22 +680,22 @@ struct DeviceRadixSortDispatch
                     even_share);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
 
                 // Log scan_kernel configuration
-                if (debug_synchronous) CubLog("Invoking scan_kernel<<<%d, %d, 0, %lld>>>(), %d items per thread\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(scan_kernel, dim3(%d), dim3(%d), 0, %lld), %d items per thread\n",
                     1, scan_config.block_threads, (long long) stream, scan_config.items_per_thread);
 
                 // Invoke scan_kernel
-                scan_kernel<<<1, scan_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(scan_kernel, dim3(1), dim3(scan_config.block_threads), 0, stream, 
                     d_spine,
                     spine_size);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -704,16 +705,16 @@ struct DeviceRadixSortDispatch
                 // Update smem config if necessary
                 if (current_smem_config != downsweep_config.smem_config)
                 {
-                    if (CubDebug(error = cudaDeviceSetSharedMemConfig(downsweep_config.smem_config))) break;
+                    if (CubDebug(error = hipDeviceSetSharedMemConfig(downsweep_config.smem_config))) break;
                     current_smem_config = downsweep_config.smem_config;
                 }
 #endif
                 // Log downsweep_kernel configuration
-                if (debug_synchronous) CubLog("Invoking downsweep_kernel<<<%d, %d, 0, %lld>>>(), %d smem config, %d items per thread, %d SM occupancy\n",
+                if (debug_synchronous) CubLog("Invoking hipLaunchKernelGGL(downsweep_kernel, dim3(%d), dim3(%d), 0, %lld), %d smem config, %d items per thread, %d SM occupancy\n",
                     even_share.grid_size, downsweep_config.block_threads, (long long) stream, downsweep_config.smem_config, downsweep_config.items_per_thread, downsweep_config.sm_occupancy);
 
                 // Invoke downsweep_kernel
-                downsweep_kernel<<<even_share.grid_size, downsweep_config.block_threads, 0, stream>>>(
+                hipLaunchKernelGGL(downsweep_kernel, dim3(even_share.grid_size), dim3(downsweep_config.block_threads), 0, stream, 
                     d_keys.d_buffers[d_keys.selector],
                     d_keys.d_buffers[d_keys.selector ^ 1],
                     d_values.d_buffers[d_values.selector],
@@ -727,7 +728,7 @@ struct DeviceRadixSortDispatch
                     even_share);
 
                 // Check for failure to launch
-                if (CubDebug(error = cudaPeekAtLastError())) break;
+                if (CubDebug(error = hipPeekAtLastError())) break;
 
                 // Sync the stream if specified to flush runtime errors
                 if (debug_synchronous && (CubDebug(error = SyncStream(stream)))) break;
@@ -744,7 +745,7 @@ struct DeviceRadixSortDispatch
             // Reset smem config if necessary
             if (current_smem_config != original_smem_config)
             {
-                if (CubDebug(error = cudaDeviceSetSharedMemConfig(original_smem_config))) break;
+                if (CubDebug(error = hipDeviceSetSharedMemConfig(original_smem_config))) break;
             }
 #endif
 
@@ -761,11 +762,11 @@ struct DeviceRadixSortDispatch
      * Internal dispatch routine
      */
     template <
-        typename UpsweepKernelPtr,          ///< Function type of cub::RadixSortUpsweepKernel
-        typename ScanKernelPtr,             ///< Function type of cub::SpineScanKernel
-        typename DownsweepKernelPtr>        ///< Function type of cub::RadixSortUpsweepKernel
+        typename UpsweepKernelPtr,          ///< Function type of hipcub::RadixSortUpsweepKernel
+        typename ScanKernelPtr,             ///< Function type of hipcub::SpineScanKernel
+        typename DownsweepKernelPtr>        ///< Function type of hipcub::RadixSortUpsweepKernel
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                    *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                  &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         DoubleBuffer<Key>       &d_keys,                        ///< [in,out] Double-buffer whose current buffer contains the unsorted input keys and, upon return, is updated to point to the sorted output keys
@@ -773,22 +774,22 @@ struct DeviceRadixSortDispatch
         Offset                  num_items,                      ///< [in] Number of items to reduce
         int                     begin_bit,                      ///< [in] The beginning (least-significant) bit index needed for key comparison
         int                     end_bit,                        ///< [in] The past-the-end (most-significant) bit index needed for key comparison
-        cudaStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                    debug_synchronous,              ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
-        UpsweepKernelPtr        upsweep_kernel,                 ///< [in] Kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
-        UpsweepKernelPtr        alt_upsweep_kernel,             ///< [in] Alternate kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
-        ScanKernelPtr           scan_kernel,                    ///< [in] Kernel function pointer to parameterization of cub::SpineScanKernel
-        DownsweepKernelPtr      downsweep_kernel,               ///< [in] Kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
-        DownsweepKernelPtr      alt_downsweep_kernel)           ///< [in] Alternate kernel function pointer to parameterization of cub::RadixSortUpsweepKernel
+        UpsweepKernelPtr        upsweep_kernel,                 ///< [in] Kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
+        UpsweepKernelPtr        alt_upsweep_kernel,             ///< [in] Alternate kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
+        ScanKernelPtr           scan_kernel,                    ///< [in] Kernel function pointer to parameterization of hipcub::SpineScanKernel
+        DownsweepKernelPtr      downsweep_kernel,               ///< [in] Kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
+        DownsweepKernelPtr      alt_downsweep_kernel)           ///< [in] Alternate kernel function pointer to parameterization of hipcub::RadixSortUpsweepKernel
     {
 #ifndef CUB_RUNTIME_ENABLED
 
         // Kernel launch not supported from this device
-        return CubDebug(cudaErrorNotSupported );
+        return CubDebug(hipErrorNotSupported );
 
 #else
 
-        cudaError error = cudaSuccess;
+        hipError_t error = hipSuccess;
 
         do
         {
@@ -802,7 +803,7 @@ struct DeviceRadixSortDispatch
 
             // Get device ordinal
             int device_ordinal;
-            if (CubDebug(error = cudaGetDevice(&device_ordinal))) break;
+            if (CubDebug(error = hipGetDevice(&device_ordinal))) break;
 
             // Get device SM version
             int sm_version;
@@ -810,7 +811,7 @@ struct DeviceRadixSortDispatch
 
             // Get SM count
             int sm_count;
-            if (CubDebug(error = cudaDeviceGetAttribute (&sm_count, cudaDevAttrMultiProcessorCount, device_ordinal))) break;
+            if (CubDebug(error = hipDeviceGetAttribute (&sm_count, hipDeviceAttributeMultiprocessorCount, device_ordinal))) break;
 
             // Get kernel kernel dispatch configurations
             KernelConfig upsweep_config;
@@ -840,7 +841,7 @@ struct DeviceRadixSortDispatch
 
             // Return if the caller is simply requesting the size of the storage allocation
             if (d_temp_storage == NULL)
-                return cudaSuccess;
+                return hipSuccess;
 
             // Run radix sorting passes
             int num_bits = end_bit - begin_bit;
@@ -903,7 +904,7 @@ struct DeviceRadixSortDispatch
      */
 
     CUB_RUNTIME_FUNCTION __forceinline__
-    static cudaError_t Dispatch(
+    static hipError_t Dispatch(
         void                    *d_temp_storage,                ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t                  &temp_storage_bytes,            ///< [in,out] Reference to size in bytes of \p d_temp_storage allocation
         DoubleBuffer<Key>       &d_keys,                        ///< [in,out] Double-buffer whose current buffer contains the unsorted input keys and, upon return, is updated to point to the sorted output keys
@@ -911,7 +912,7 @@ struct DeviceRadixSortDispatch
         Offset                  num_items,                      ///< [in] Number of items to reduce
         int                     begin_bit,                      ///< [in] The beginning (least-significant) bit index needed for key comparison
         int                     end_bit,                        ///< [in] The past-the-end (most-significant) bit index needed for key comparison
-        cudaStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
+        hipStream_t            stream,                         ///< [in] CUDA stream to launch kernels within.  Default is stream<sub>0</sub>.
         bool                    debug_synchronous)              ///< [in] Whether or not to synchronize the stream after every kernel launch to check for errors.  Also causes launch configurations to be printed to the console.  Default is \p false.
     {
         return Dispatch(

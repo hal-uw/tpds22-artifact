@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::BlockRangeReduceByKey implements a stateful abstraction of CUDA thread blocks for participating in device-wide reduce-value-by-key.
+ * hipcub::BlockRangeReduceByKey implements a stateful abstraction of CUDA thread blocks for participating in device-wide reduce-value-by-key.
  */
 
 #pragma once
@@ -190,13 +190,13 @@ struct ReduceByKeyScanTileState<Value, Offset, true>
 
     /// Initializer
     __host__ __device__ __forceinline__
-    cudaError_t Init(
+    hipError_t Init(
         int     num_tiles,                          ///< [in] Number of tiles
         void    *d_temp_storage,                    ///< [in] %Device allocation of temporary storage.  When NULL, the required allocation size is written to \p temp_storage_bytes and no work is done.
         size_t  temp_storage_bytes)                 ///< [in] Size in bytes of \t d_temp_storage allocation
     {
         d_tile_status = reinterpret_cast<TileDescriptor*>(d_temp_storage);
-        return cudaSuccess;
+        return hipSuccess;
     }
 
 
@@ -204,12 +204,12 @@ struct ReduceByKeyScanTileState<Value, Offset, true>
      * Compute device memory needed for tile status
      */
     __host__ __device__ __forceinline__
-    static cudaError_t AllocationSize(
+    static hipError_t AllocationSize(
         int     num_tiles,                          ///< [in] Number of tiles
         size_t  &temp_storage_bytes)                ///< [out] Size in bytes of \t d_temp_storage allocation
     {
         temp_storage_bytes = (num_tiles + TILE_STATUS_PADDING) * sizeof(TileDescriptor);       // bytes needed for tile status descriptors
-        return cudaSuccess;
+        return hipSuccess;
     }
 
 
@@ -331,7 +331,7 @@ struct BlockRangeReduceByKey
         TILE_ITEMS          = BLOCK_THREADS * ITEMS_PER_THREAD,
 
         // Whether or not the scan operation has a zero-valued identity value (true if we're performing addition on a primitive type)
-        HAS_IDENTITY_ZERO       = (Equals<ReductionOp, cub::Sum>::VALUE) && (Traits<Value>::PRIMITIVE),
+        HAS_IDENTITY_ZERO       = (Equals<ReductionOp, hipcub::Sum>::VALUE) && (Traits<Value>::PRIMITIVE),
 
         // Whether or not to sync after loading data
         SYNC_AFTER_LOAD         = (BlockRangeReduceByKeyPolicy::LOAD_ALGORITHM != BLOCK_LOAD_DIRECT),

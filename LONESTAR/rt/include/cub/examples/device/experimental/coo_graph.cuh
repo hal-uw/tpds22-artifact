@@ -39,7 +39,7 @@
 #include <iostream>
 #include <stdio.h>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 using namespace std;
 

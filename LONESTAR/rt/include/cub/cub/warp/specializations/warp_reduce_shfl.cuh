@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::WarpReduceShfl provides SHFL-based variants of parallel reduction of items partitioned across a CUDA thread warp.
+ * hipcub::WarpReduceShfl provides SHFL-based variants of parallel reduction of items partitioned across a CUDA thread warp.
  */
 
 #pragma once
@@ -167,7 +167,7 @@ struct WarpReduceShfl
         Int2Type<false>     single_shfl)            ///< [in] Marker type indicating whether only one SHFL instruction is required
     {
         // Delegate to generic reduce
-        return Reduce<ALL_LANES_VALID, FOLDED_ITEMS_PER_LANE>(input, folded_items_per_warp, cub::Sum());
+        return Reduce<ALL_LANES_VALID, FOLDED_ITEMS_PER_LANE>(input, folded_items_per_warp, hipcub::Sum());
     }
 
 

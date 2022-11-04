@@ -76,9 +76,9 @@ namespace cub {
  * dereference a sequence of homogeneous doubles.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/constant_input_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/constant_input_iterator.cuh>
  *
- * cub::ConstantInputIterator<double> itr(5.0);
+ * hipcub::ConstantInputIterator<double> itr(5.0);
  *
  * printf("%f\n", itr[0]);      // 5.0
  * printf("%f\n", itr[1]);      // 5.0

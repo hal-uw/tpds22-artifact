@@ -36,7 +36,7 @@
     #include <sys/resource.h>
 #endif
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -212,14 +212,14 @@ public:
     /**
      * Initialize device
      */
-    cudaError_t DeviceInit(int dev = -1)
+    hipError_t DeviceInit(int dev = -1)
     {
-        cudaError_t error = cudaSuccess;
+        hipError_t error = hipSuccess;
 
         do
         {
             int deviceCount;
-            error = CubDebug(cudaGetDeviceCount(&deviceCount));
+            error = CubDebug(hipGetDeviceCount(&deviceCount));
             if (error) break;
 
             if (deviceCount == 0) {
@@ -235,18 +235,18 @@ public:
                 dev = 0;
             }
 
-            error = CubDebug(cudaSetDevice(dev));
+            error = CubDebug(hipSetDevice(dev));
             if (error) break;
 
             size_t free_physmem, total_physmem;
-            CubDebugExit(cudaMemGetInfo(&free_physmem, &total_physmem));
+            CubDebugExit(hipMemGetInfo(&free_physmem, &total_physmem));
 
             int ptx_version;
-            error = CubDebug(cub::PtxVersion(ptx_version));
+            error = CubDebug(hipcub::PtxVersion(ptx_version));
             if (error) break;
 
-            cudaDeviceProp deviceProp;
-            error = CubDebug(cudaGetDeviceProperties(&deviceProp, dev));
+            hipDeviceProp_t deviceProp;
+            error = CubDebug(hipGetDeviceProperties(&deviceProp, dev));
             if (error) break;
 
             if (deviceProp.major < 1) {
@@ -416,7 +416,7 @@ __host__ __device__ __forceinline__ void InitValue(GenMode gen_mode, T &value, i
 /**
  * TestFoo test initialization
  */
-__host__ __device__ __forceinline__ void InitValue(GenMode gen_mode, cub::NullType &value, int index = 0)
+__host__ __device__ __forceinline__ void InitValue(GenMode gen_mode, hipcub::NullType &value, int index = 0)
 {}
 
 /******************************************************************************
@@ -428,7 +428,7 @@ __host__ __device__ __forceinline__ void InitValue(GenMode gen_mode, cub::NullTy
  * ItemOffsetPair ostream operator
  */
 template <typename T, typename Offset>
-std::ostream& operator<<(std::ostream& os, const cub::ItemOffsetPair<T, Offset> &val)
+std::ostream& operator<<(std::ostream& os, const hipcub::ItemOffsetPair<T, Offset> &val)
 {
     os << '(' << val.value<< ',' << val.offset << ')';
     return os;
@@ -438,7 +438,7 @@ std::ostream& operator<<(std::ostream& os, const cub::ItemOffsetPair<T, Offset> 
  * KeyValuePair ostream operator
  */
 template <typename Key, typename Value>
-std::ostream& operator<<(std::ostream& os, const cub::KeyValuePair<Key, Value> &val)
+std::ostream& operator<<(std::ostream& os, const hipcub::KeyValuePair<Key, Value> &val)
 {
     os << '(' << val.key << ',' << val.value << ')';
     return os;
@@ -971,7 +971,7 @@ int CompareResults(float* computed, float* reference, Offset len, bool verbose =
  * Compares the equivalence of two arrays
  */
 template <typename Offset>
-int CompareResults(cub::NullType* computed, cub::NullType* reference, Offset len, bool verbose = true)
+int CompareResults(hipcub::NullType* computed, hipcub::NullType* reference, Offset len, bool verbose = true)
 {
     return 0;
 }
@@ -1007,8 +1007,8 @@ int CompareResults(double* computed, double* reference, Offset len, bool verbose
  * of a host array
  */
 int CompareDeviceResults(
-    cub::NullType *h_reference,
-    cub::NullType *d_data,
+    hipcub::NullType *h_reference,
+    hipcub::NullType *d_data,
     size_t num_items,
     bool verbose = true,
     bool display_data = false)
@@ -1033,7 +1033,7 @@ int CompareDeviceResults(
     T *h_data = (T*) malloc(num_items * sizeof(T));
 
     // Copy data back
-    cudaMemcpy(h_data, d_data, sizeof(T) * num_items, cudaMemcpyDeviceToHost);
+    hipMemcpy(h_data, d_data, sizeof(T) * num_items, hipMemcpyDeviceToHost);
 
     // Display data
     if (display_data)
@@ -1078,8 +1078,8 @@ int CompareDeviceDeviceResults(
     T *h_data = (T*) malloc(num_items * sizeof(T));
 
     // Copy data back
-    cudaMemcpy(h_reference, d_reference, sizeof(T) * num_items, cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_data, d_data, sizeof(T) * num_items, cudaMemcpyDeviceToHost);
+    hipMemcpy(h_reference, d_reference, sizeof(T) * num_items, hipMemcpyDeviceToHost);
+    hipMemcpy(h_data, d_data, sizeof(T) * num_items, hipMemcpyDeviceToHost);
 
     // Display data
     if (display_data) {
@@ -1111,7 +1111,7 @@ int CompareDeviceDeviceResults(
  * Print the contents of a host array
  */
 void DisplayResults(
-    cub::NullType   *h_data,
+    hipcub::NullType   *h_data,
     size_t          num_items)
 {}
 
@@ -1145,7 +1145,7 @@ void DisplayDeviceResults(
     T *h_data = (T*) malloc(num_items * sizeof(T));
 
     // Copy data back
-    cudaMemcpy(h_data, d_data, sizeof(T) * num_items, cudaMemcpyDeviceToHost);
+    hipMemcpy(h_data, d_data, sizeof(T) * num_items, hipMemcpyDeviceToHost);
 
     DisplayResults(h_data, num_items);
 
@@ -1219,36 +1219,36 @@ struct CpuTimer
 
 struct GpuTimer
 {
-    cudaEvent_t start;
-    cudaEvent_t stop;
+    hipEvent_t start;
+    hipEvent_t stop;
 
     GpuTimer()
     {
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
+        hipEventCreate(&start);
+        hipEventCreate(&stop);
     }
 
     ~GpuTimer()
     {
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+        hipEventDestroy(start);
+        hipEventDestroy(stop);
     }
 
     void Start()
     {
-        cudaEventRecord(start, 0);
+        hipEventRecord(start, 0);
     }
 
     void Stop()
     {
-        cudaEventRecord(stop, 0);
+        hipEventRecord(stop, 0);
     }
 
     float ElapsedMillis()
     {
         float elapsed;
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&elapsed, start, stop);
+        hipEventSynchronize(stop);
+        hipEventElapsedTime(&elapsed, start, stop);
         return elapsed;
     }
 };

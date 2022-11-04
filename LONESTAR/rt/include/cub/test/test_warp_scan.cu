@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -40,7 +41,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 //---------------------------------------------------------------------
 // Globals, constants and typedefs
@@ -420,9 +421,9 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_out, sizeof(T) * (LOGICAL_WARP_THREADS + 1)));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_aggregate, sizeof(T) * LOGICAL_WARP_THREADS));
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_elapsed, sizeof(clock_t)));
-    CubDebugExit(cudaMemcpy(d_in, h_in, sizeof(T) * LOGICAL_WARP_THREADS, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemset(d_out, 0, sizeof(T) * (LOGICAL_WARP_THREADS + 1)));
-    CubDebugExit(cudaMemset(d_aggregate, 0, sizeof(T) * LOGICAL_WARP_THREADS));
+    CubDebugExit(hipMemcpy(d_in, h_in, sizeof(T) * LOGICAL_WARP_THREADS, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemset(d_out, 0, sizeof(T) * (LOGICAL_WARP_THREADS + 1)));
+    CubDebugExit(hipMemset(d_aggregate, 0, sizeof(T) * LOGICAL_WARP_THREADS));
 
     // Run kernel
     printf("Test-mode %d, gen-mode %d, %s warpscan, %d warp threads, %s (%d bytes) elements:\n",
@@ -435,7 +436,7 @@ void Test(
     fflush(stdout);
 
     // Run aggregate/prefix kernel
-    WarpScanKernel<LOGICAL_WARP_THREADS, TEST_MODE><<<1, LOGICAL_WARP_THREADS>>>(
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(WarpScanKernel<LOGICAL_WARP_THREADS, TEST_MODE>), dim3(1), dim3(LOGICAL_WARP_THREADS), 0, 0, 
         d_in,
         d_out,
         d_aggregate,
@@ -447,8 +448,8 @@ void Test(
     printf("\tElapsed clocks: ");
     DisplayDeviceResults(d_elapsed, 1);
 
-    CubDebugExit(cudaPeekAtLastError());
-    CubDebugExit(cudaDeviceSynchronize());
+    CubDebugExit(hipPeekAtLastError());
+    CubDebugExit(hipDeviceSynchronize());
 
     // Copy out and display results
     printf("\tScan results: ");
@@ -520,7 +521,7 @@ void Test(GenMode gen_mode)
 {
     // Get device ordinal
     int device_ordinal;
-    CubDebugExit(cudaGetDevice(&device_ordinal));
+    CubDebugExit(hipGetDevice(&device_ordinal));
 
     // Get ptx version
     int ptx_version;

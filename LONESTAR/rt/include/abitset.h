@@ -36,7 +36,7 @@ template <typename T>
 class ApproxBitset {
   int nbits;
   Shared<T> bitset;
-  cudaTextureObject_t btx;
+  hipTextureObject_t btx;
   static const unsigned int bits_per_base = Base<T>::BITS, divby = Base<T>::LOG_BITS, modby = (1 << Base<T>::LOG_BITS) - 1;
   T *bitarray;
 
@@ -64,20 +64,20 @@ public:
     bitset.zero_gpu();
     bitarray = bitset.gpu_wr_ptr();
 
-    cudaResourceDesc resDesc;
+    hipResourceDesc resDesc;
 
     memset(&resDesc, 0, sizeof(resDesc));
-    resDesc.resType = cudaResourceTypeLinear;
-    resDesc.res.linear.desc.f = cudaChannelFormatKindUnsigned;
+    resDesc.resType = hipResourceTypeLinear;
+    resDesc.res.linear.desc.f = hipChannelFormatKindUnsigned;
     resDesc.res.linear.desc.x = Base<T>::BITS; // bits per channel
 
-    cudaTextureDesc texDesc;
+    hipTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
-    texDesc.readMode = cudaReadModeElementType;
+    texDesc.readMode = hipReadModeElementType;
 
     resDesc.res.linear.devPtr = bitarray;
     resDesc.res.linear.sizeInBytes = size;
-    check_cuda(cudaCreateTextureObject(&btx, &resDesc, &texDesc, NULL));
+    check_cuda(hipCreateTextureObject(&btx, &resDesc, &texDesc, NULL));
   }
 
   __device__ void set(int pos) {

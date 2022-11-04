@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -46,7 +47,7 @@
 
 #include "test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 
 
 //---------------------------------------------------------------------
@@ -78,11 +79,11 @@ template <
     typename                    ReductionOp,
     typename                    Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>               dispatch_to,
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      &temp_storage_bytes,
@@ -94,10 +95,10 @@ cudaError_t Dispatch(
     EqualityOp                  equality_op,
     ReductionOp                 reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::ReduceByKey(
@@ -127,11 +128,11 @@ template <
     typename                    NumSegmentsIterator,
     typename                    Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CUB>               dispatch_to,
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      &temp_storage_bytes,
@@ -140,13 +141,13 @@ cudaError_t Dispatch(
     ConstantInputIterator<typename std::iterator_traits<ValueOutputIterator>::value_type, Offset> d_values_in,
     ValueOutputIterator         d_values_out,
     NumSegmentsIterator         d_num_segments,
-    cub::Equality               equality_op,
-    cub::Sum                    reduction_op,
+    hipcub::Equality               equality_op,
+    hipcub::Sum                    reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
-    cudaError_t error = cudaSuccess;
+    hipError_t error = hipSuccess;
     for (int i = 0; i < timing_timing_iterations; ++i)
     {
         error = DeviceReduce::RunLengthEncode(
@@ -181,11 +182,11 @@ template <
     typename                    EqualityOp,
     typename                    ReductionOp,
     typename                    Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>            dispatch_to,
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      &temp_storage_bytes,
@@ -197,7 +198,7 @@ cudaError_t Dispatch(
     EqualityOp                  equality_op,
     ReductionOp                 reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
     typedef typename std::iterator_traits<KeyInputIterator>::value_type Key;
@@ -228,11 +229,11 @@ cudaError_t Dispatch(
         }
 
         Offset num_segments = d_out_ends.first - d_keys_out_wrapper;
-        CubDebugExit(cudaMemcpy(d_num_segments, &num_segments, sizeof(Offset), cudaMemcpyHostToDevice));
+        CubDebugExit(hipMemcpy(d_num_segments, &num_segments, sizeof(Offset), hipMemcpyHostToDevice));
 
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -245,11 +246,11 @@ template <
     typename                    ValueOutputIterator,
     typename                    NumSegmentsIterator,
     typename                    Offset>
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<THRUST>            dispatch_to,
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      &temp_storage_bytes,
@@ -258,10 +259,10 @@ cudaError_t Dispatch(
     ConstantInputIterator<typename std::iterator_traits<ValueOutputIterator>::value_type, Offset> d_values_in,
     ValueOutputIterator         d_values_out,
     NumSegmentsIterator         d_num_segments,
-    cub::Equality               equality_op,
-    cub::Sum                    reduction_op,
+    hipcub::Equality               equality_op,
+    hipcub::Sum                    reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
     typedef typename std::iterator_traits<KeyInputIterator>::value_type Key;
@@ -295,10 +296,10 @@ cudaError_t Dispatch(
         }
 
         Offset num_segments = d_out_ends.first - d_keys_out_wrapper;
-        CubDebugExit(cudaMemcpy(d_num_segments, &num_segments, sizeof(Offset), cudaMemcpyHostToDevice));
+        CubDebugExit(hipMemcpy(d_num_segments, &num_segments, sizeof(Offset), hipMemcpyHostToDevice));
     }
 
-    return cudaSuccess;
+    return hipSuccess;
 }
 
 
@@ -322,7 +323,7 @@ template <
 __global__ void CnpDispatchKernel(
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      temp_storage_bytes,
@@ -334,12 +335,12 @@ __global__ void CnpDispatchKernel(
     EqualityOp                  equality_op,
     ReductionOp                 reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
 
 #ifndef CUB_CDP
-    *d_cdp_error = cudaErrorNotSupported;
+    *d_cdp_error = hipErrorNotSupported;
 #else
     *d_cdp_error = Dispatch(Int2Type<CUB>(), timing_timing_iterations, d_temp_storage_bytes, d_cdp_error,
         d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, equality_op, reduction_op, num_items, 0, debug_synchronous);
@@ -362,11 +363,11 @@ template <
     typename                    ReductionOp,
     typename                    Offset>
 CUB_RUNTIME_FUNCTION __forceinline__
-cudaError_t Dispatch(
+hipError_t Dispatch(
     Int2Type<CDP>               dispatch_to,
     int                         timing_timing_iterations,
     size_t                      *d_temp_storage_bytes,
-    cudaError_t                 *d_cdp_error,
+    hipError_t                 *d_cdp_error,
 
     void                        *d_temp_storage,
     size_t                      &temp_storage_bytes,
@@ -378,19 +379,19 @@ cudaError_t Dispatch(
     EqualityOp                  equality_op,
     ReductionOp                 reduction_op,
     Offset                      num_items,
-    cudaStream_t                stream,
+    hipStream_t                stream,
     bool                        debug_synchronous)
 {
     // Invoke kernel to invoke device-side dispatch
-    CnpDispatchKernel<<<1,1>>>(timing_timing_iterations, d_temp_storage_bytes, d_cdp_error,
+    hipLaunchKernelGGL(CnpDispatchKernel, dim3(1), dim3(1), 0, 0, timing_timing_iterations, d_temp_storage_bytes, d_cdp_error,
         d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, equality_op, reduction_op, num_items, 0, debug_synchronous);
 
     // Copy out temp_storage_bytes
-    CubDebugExit(cudaMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, cudaMemcpyDeviceToHost));
+    CubDebugExit(hipMemcpy(&temp_storage_bytes, d_temp_storage_bytes, sizeof(size_t) * 1, hipMemcpyDeviceToHost));
 
     // Copy out error
-    cudaError_t retval;
-    CubDebugExit(cudaMemcpy(&retval, d_cdp_error, sizeof(cudaError_t) * 1, cudaMemcpyDeviceToHost));
+    hipError_t retval;
+    CubDebugExit(hipMemcpy(&retval, d_cdp_error, sizeof(hipError_t) * 1, hipMemcpyDeviceToHost));
     return retval;
 }
 
@@ -528,9 +529,9 @@ void Test(
 
     // Allocate CDP device arrays
     size_t          *d_temp_storage_bytes = NULL;
-    cudaError_t     *d_cdp_error = NULL;
+    hipError_t     *d_cdp_error = NULL;
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_temp_storage_bytes,  sizeof(size_t) * 1));
-    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(cudaError_t) * 1));
+    CubDebugExit(g_allocator.DeviceAllocate((void**)&d_cdp_error,           sizeof(hipError_t) * 1));
 
     // Allocate temporary storage
     void            *d_temp_storage = NULL;
@@ -539,9 +540,9 @@ void Test(
     CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
 
     // Clear device output arrays
-    CubDebugExit(cudaMemset(d_keys_out, 0, sizeof(Key) * num_items));
-    CubDebugExit(cudaMemset(d_values_out, 0, sizeof(Value) * num_items));
-    CubDebugExit(cudaMemset(d_num_segments, 0, sizeof(int)));
+    CubDebugExit(hipMemset(d_keys_out, 0, sizeof(Key) * num_items));
+    CubDebugExit(hipMemset(d_values_out, 0, sizeof(Value) * num_items));
+    CubDebugExit(hipMemset(d_num_segments, 0, sizeof(int)));
 
     // Run warmup/correctness iteration
     CubDebugExit(Dispatch(Int2Type<BACKEND>(), 1, d_temp_storage_bytes, d_cdp_error, d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out, d_values_in, d_values_out, d_num_segments, equality_op, reduction_op, num_items, 0, true));
@@ -626,7 +627,7 @@ void TestPointer(
     Initialize(entropy_reduction, h_keys_in, num_items, max_segment);
     int num_segments = Solve(h_keys_in, h_keys_reference, h_values_in, h_values_reference, equality_op, reduction_op, num_items);
 
-    printf("\nPointer %s cub::DeviceReduce::ReduceByKey %s reduction of %d items, %d segments (avg run length %d), {%s,%s} key value pairs, max_segment %d, entropy_reduction %d\n",
+    printf("\nPointer %s hipcub::DeviceReduce::ReduceByKey %s reduction of %d items, %d segments (avg run length %d), {%s,%s} key value pairs, max_segment %d, entropy_reduction %d\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<ReductionOp, Sum>::VALUE) ? "Sum" : "Max",
         num_items, num_segments, num_items / num_segments,
@@ -641,8 +642,8 @@ void TestPointer(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_values_in, sizeof(Value) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_keys_in, h_keys_in, sizeof(Key) * num_items, cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_values_in, h_values_in, sizeof(Value) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_keys_in, h_keys_in, sizeof(Key) * num_items, hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_values_in, h_values_in, sizeof(Value) * num_items, hipMemcpyHostToDevice));
 
     // Run Test
     Test<BACKEND>(d_keys_in, d_values_in, h_keys_reference, h_values_reference, equality_op, reduction_op, num_segments, num_items, key_type_string, value_type_string);
@@ -688,7 +689,7 @@ void TestIterator(
     Initialize(entropy_reduction, h_keys_in, num_items, max_segment);
     int num_segments = Solve(h_keys_in, h_keys_reference, h_values_in, h_values_reference, equality_op, reduction_op, num_items);
 
-    printf("\nIterator %s cub::DeviceReduce::ReduceByKey %s reduction of %d items, %d segments (avg run length %d), {%s,%s} key value pairs, max_segment %d, entropy_reduction %d\n",
+    printf("\nIterator %s hipcub::DeviceReduce::ReduceByKey %s reduction of %d items, %d segments (avg run length %d), {%s,%s} key value pairs, max_segment %d, entropy_reduction %d\n",
         (BACKEND == CDP) ? "CDP CUB" : (BACKEND == THRUST) ? "Thrust" : "CUB",
         (Equals<ReductionOp, Sum>::VALUE) ? "Sum" : "Max",
         num_items, num_segments, num_items / num_segments,
@@ -701,7 +702,7 @@ void TestIterator(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_keys_in, sizeof(Key) * num_items));
 
     // Initialize device input
-    CubDebugExit(cudaMemcpy(d_keys_in, h_keys_in, sizeof(Key) * num_items, cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_keys_in, h_keys_in, sizeof(Key) * num_items, hipMemcpyHostToDevice));
 
     // Run Test
     Test<BACKEND>(d_keys_in, h_values_in, h_keys_reference, h_values_reference, equality_op, reduction_op, num_segments, num_items, key_type_string, value_type_string);
@@ -823,8 +824,8 @@ void TestOp(
     char*           key_type_string,
     char*           value_type_string)
 {
-    TestSize<Key, Value>(num_items, cub::Sum(), key_type_string, value_type_string);
-    TestSize<Key, Value>(num_items, cub::Max(), key_type_string, value_type_string);
+    TestSize<Key, Value>(num_items, hipcub::Sum(), key_type_string, value_type_string);
+    TestSize<Key, Value>(num_items, hipcub::Max(), key_type_string, value_type_string);
 }
 
 
@@ -881,26 +882,26 @@ int main(int argc, char** argv)
     if (num_items < 0) num_items = 32000000;
 
     printf("---- RLE int ---- \n");
-    TestIterator<CUB, int, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
-    TestIterator<THRUST, int, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
+    TestIterator<CUB, int, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
+    TestIterator<THRUST, int, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
 
     printf("---- RLE long long ---- \n");
-    TestIterator<CUB, long long, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(long long), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
-    TestIterator<THRUST, long long, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(long long), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
+    TestIterator<CUB, long long, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(long long), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
+    TestIterator<THRUST, long long, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(long long), CUB_TYPE_STRING(int), Int2Type<Traits<int>::PRIMITIVE>());
 
     printf("---- int ---- \n");
-    TestPointer<CUB, int, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int));
-    TestPointer<THRUST, int, int>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int));
+    TestPointer<CUB, int, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int));
+    TestPointer<THRUST, int, int>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(int));
 
     printf("---- float ---- \n");
-    TestPointer<CUB, int, float>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(float));
-    TestPointer<THRUST, int, float>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(float));
+    TestPointer<CUB, int, float>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(float));
+    TestPointer<THRUST, int, float>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(float));
 
     if (ptx_version > 100)                          // Don't check doubles on PTX100 because they're down-converted
     {
         printf("---- double ---- \n");
-        TestPointer<CUB, int, double>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(double));
-        TestPointer<THRUST, int, double>(num_items, entropy_reduction, maxseg, cub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(double));
+        TestPointer<CUB, int, double>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(double));
+        TestPointer<THRUST, int, double>(num_items, entropy_reduction, maxseg, hipcub::Sum(), CUB_TYPE_STRING(int), CUB_TYPE_STRING(double));
     }
 
 #else

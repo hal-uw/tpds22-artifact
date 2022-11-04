@@ -79,16 +79,16 @@ namespace cub {
  * dereference an array of doubles
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/iterator/arg_index_input_iterator.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/iterator/arg_index_input_iterator.cuh>
  *
  * // Declare, allocate, and initialize a device array
  * double *d_in;         // e.g., [8.0, 6.0, 7.0, 5.0, 3.0, 0.0, 9.0]
  *
  * // Create an iterator wrapper
- * cub::ArgIndexInputIterator<double*> itr(d_in);
+ * hipcub::ArgIndexInputIterator<double*> itr(d_in);
  *
  * // Within device code:
- * typedef typename cub::ArgIndexInputIterator<double*>::value_type Tuple;
+ * typedef typename hipcub::ArgIndexInputIterator<double*>::value_type Tuple;
  * Tuple item_offset_pair.offset = *itr;
  * printf("%f @ %d\n",
  *  item_offset_pair.value,

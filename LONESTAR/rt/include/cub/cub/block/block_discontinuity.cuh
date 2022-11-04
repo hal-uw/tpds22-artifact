@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -28,7 +29,7 @@
 
 /**
  * \file
- * The cub::BlockDiscontinuity class provides [<em>collective</em>](index.html#sec0) methods for flagging discontinuities within an ordered set of items partitioned across a CUDA thread block.
+ * The hipcub::BlockDiscontinuity class provides [<em>collective</em>](index.html#sec0) methods for flagging discontinuities within an ordered set of items partitioned across a CUDA thread block.
  */
 
 #pragma once
@@ -70,12 +71,12 @@ namespace cub {
  * where each thread owns 4 consecutive items.
  * \par
  * \code
- * #include <cub/cub.cuh>   // or equivalently <cub/block/block_discontinuity.cuh>
+ * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_discontinuity.cuh>
  *
  * __global__ void ExampleKernel(...)
  * {
  *     // Specialize BlockDiscontinuity for a 1D block of 128 threads on type int
- *     typedef cub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
+ *     typedef hipcub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
  *
  *     // Allocate shared memory for BlockDiscontinuity
  *     __shared__ typename BlockDiscontinuity::TempStorage temp_storage;
@@ -86,7 +87,7 @@ namespace cub {
  *
  *     // Collectively compute head flags for discontinuities in the segment
  *     int head_flags[4];
- *     BlockDiscontinuity(temp_storage).FlagHeads(head_flags, thread_data, cub::Inequality());
+ *     BlockDiscontinuity(temp_storage).FlagHeads(head_flags, thread_data, hipcub::Inequality());
  *
  * \endcode
  * \par
@@ -270,12 +271,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_discontinuity.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_discontinuity.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockDiscontinuity for a 1D block of 128 threads on type int
-     *     typedef cub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
+     *     typedef hipcub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
      *
      *     // Allocate shared memory for BlockDiscontinuity
      *     __shared__ typename BlockDiscontinuity::TempStorage temp_storage;
@@ -286,7 +287,7 @@ public:
      *
      *     // Collectively compute head flags for discontinuities in the segment
      *     int head_flags[4];
-     *     BlockDiscontinuity(temp_storage).FlagHeads(head_flags, thread_data, cub::Inequality());
+     *     BlockDiscontinuity(temp_storage).FlagHeads(head_flags, thread_data, hipcub::Inequality());
      *
      * \endcode
      * \par
@@ -348,12 +349,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_discontinuity.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_discontinuity.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockDiscontinuity for a 1D block of 128 threads on type int
-     *     typedef cub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
+     *     typedef hipcub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
      *
      *     // Allocate shared memory for BlockDiscontinuity
      *     __shared__ typename BlockDiscontinuity::TempStorage temp_storage;
@@ -369,7 +370,7 @@ public:
      *     // Collectively compute head flags for discontinuities in the segment
      *     int head_flags[4];
      *     BlockDiscontinuity(temp_storage).FlagHeads(
-     *         head_flags, thread_data, cub::Inequality(), tile_predecessor_item);
+     *         head_flags, thread_data, hipcub::Inequality(), tile_predecessor_item);
      *
      * \endcode
      * \par
@@ -441,12 +442,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_discontinuity.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_discontinuity.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockDiscontinuity for a 1D block of 128 threads on type int
-     *     typedef cub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
+     *     typedef hipcub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
      *
      *     // Allocate shared memory for BlockDiscontinuity
      *     __shared__ typename BlockDiscontinuity::TempStorage temp_storage;
@@ -457,7 +458,7 @@ public:
      *
      *     // Collectively compute tail flags for discontinuities in the segment
      *     int tail_flags[4];
-     *     BlockDiscontinuity(temp_storage).FlagTails(tail_flags, thread_data, cub::Inequality());
+     *     BlockDiscontinuity(temp_storage).FlagTails(tail_flags, thread_data, hipcub::Inequality());
      *
      * \endcode
      * \par
@@ -520,12 +521,12 @@ public:
      * where each thread owns 4 consecutive items.
      * \par
      * \code
-     * #include <cub/cub.cuh>   // or equivalently <cub/block/block_discontinuity.cuh>
+     * #include <hipcub/hipcub.hpp>   // or equivalently <cub/block/block_discontinuity.cuh>
      *
      * __global__ void ExampleKernel(...)
      * {
      *     // Specialize BlockDiscontinuity for a 1D block of 128 threads on type int
-     *     typedef cub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
+     *     typedef hipcub::BlockDiscontinuity<int, 128> BlockDiscontinuity;
      *
      *     // Allocate shared memory for BlockDiscontinuity
      *     __shared__ typename BlockDiscontinuity::TempStorage temp_storage;
@@ -541,7 +542,7 @@ public:
      *     // Collectively compute tail flags for discontinuities in the segment
      *     int tail_flags[4];
      *     BlockDiscontinuity(temp_storage).FlagTails(
-     *         tail_flags, thread_data, cub::Inequality(), tile_successor_item);
+     *         tail_flags, thread_data, hipcub::Inequality(), tile_successor_item);
      *
      * \endcode
      * \par

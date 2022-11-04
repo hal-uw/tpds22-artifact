@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /******************************************************************************
  * Copyright (c) 2011, Duane Merrill.  All rights reserved.
  * Copyright (c) 2011-2014, NVIDIA CORPORATION.  All rights reserved.
@@ -40,12 +41,12 @@
 #include <algorithm>
 #include <stdio.h>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include "coo_graph.cuh"
 #include "../test/test_util.h"
 
-using namespace cub;
+using namespace hipcub;
 using namespace std;
 
 
@@ -75,7 +76,7 @@ struct TexVector
     typedef typename If<(Equals<Value, double>::VALUE), uint2, Value>::Type CastType;
 
     // Texture reference type
-    typedef texture<CastType, cudaTextureType1D, cudaReadModeElementType> TexRef;
+    typedef texture<CastType, hipTextureType1D, hipReadModeElementType> TexRef;
 
     static TexRef ref;
 
@@ -84,12 +85,12 @@ struct TexVector
      */
     static void BindTexture(void *d_in, int elements)
     {
-        cudaChannelFormatDesc tex_desc = cudaCreateChannelDesc<CastType>();
+        hipChannelFormatDesc tex_desc = hipCreateChannelDesc<CastType>();
         if (d_in)
         {
             size_t offset;
             size_t bytes = sizeof(CastType) * elements;
-            CubDebugExit(cudaBindTexture(&offset, ref, d_in, tex_desc, bytes));
+            CubDebugExit(hipBindTexture(&offset, ref, d_in, tex_desc, bytes));
         }
     }
 
@@ -98,7 +99,7 @@ struct TexVector
      */
     static void UnbindTexture()
     {
-        CubDebugExit(cudaUnbindTexture(ref));
+        CubDebugExit(hipUnbindTexture(ref));
     }
 
     /**
@@ -815,24 +816,24 @@ void TestDevice(
     CubDebugExit(g_allocator.DeviceAllocate((void**)&d_block_partials,  sizeof(PartialProduct) * num_partials));
 
     // Copy host arrays to device
-    CubDebugExit(cudaMemcpy(d_rows,     h_rows,     sizeof(VertexId) * num_edges,       cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_columns,  h_columns,  sizeof(VertexId) * num_edges,       cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_values,   h_values,   sizeof(Value) * num_edges,          cudaMemcpyHostToDevice));
-    CubDebugExit(cudaMemcpy(d_vector,   h_vector,   sizeof(Value) * coo_graph.col_dim,  cudaMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_rows,     h_rows,     sizeof(VertexId) * num_edges,       hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_columns,  h_columns,  sizeof(VertexId) * num_edges,       hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_values,   h_values,   sizeof(Value) * num_edges,          hipMemcpyHostToDevice));
+    CubDebugExit(hipMemcpy(d_vector,   h_vector,   sizeof(Value) * coo_graph.col_dim,  hipMemcpyHostToDevice));
 
     // Bind textures
     TexVector<Value>::BindTexture(d_vector, coo_graph.col_dim);
 
     // Print debug info
-    printf("CooKernel<%d, %d><<<%d, %d>>>(...), Max SM occupancy: %d\n",
+    printf("hipLaunchKernelGGL(HIP_KERNEL_NAME(CooKernel<%d, %d>), dim3(%d), dim3(%d), 0, 0, ...), Max SM occupancy: %d\n",
         COO_BLOCK_THREADS, COO_ITEMS_PER_THREAD, coo_grid_size, COO_BLOCK_THREADS, coo_sm_occupancy);
     if (coo_grid_size > 1)
     {
-        printf("CooFinalizeKernel<<<1, %d>>>(...)\n", FINALIZE_BLOCK_THREADS);
+        printf("hipLaunchKernelGGL(CooFinalizeKernel, dim3(1), dim3(%d), 0, 0, ...)\n", FINALIZE_BLOCK_THREADS);
     }
     fflush(stdout);
 
-    CubDebugExit(cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte));
+    CubDebugExit(hipDeviceSetSharedMemConfig(hipSharedMemBankSizeEightByte));
 
     // Run kernel (always run one iteration without timing)
     GpuTimer gpu_timer;
@@ -842,10 +843,10 @@ void TestDevice(
         gpu_timer.Start();
 
         // Initialize output
-        CubDebugExit(cudaMemset(d_result, 0, coo_graph.row_dim * sizeof(Value)));
+        CubDebugExit(hipMemset(d_result, 0, coo_graph.row_dim * sizeof(Value)));
 
         // Run the COO kernel
-        CooKernel<COO_BLOCK_THREADS, COO_ITEMS_PER_THREAD><<<coo_grid_size, COO_BLOCK_THREADS>>>(
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(CooKernel<COO_BLOCK_THREADS, COO_ITEMS_PER_THREAD>), dim3(coo_grid_size), dim3(COO_BLOCK_THREADS), 0, 0, 
             even_share,
             d_block_partials,
             d_rows,
@@ -857,7 +858,7 @@ void TestDevice(
         if (coo_grid_size > 1)
         {
             // Run the COO finalize kernel
-            CooFinalizeKernel<FINALIZE_BLOCK_THREADS, FINALIZE_ITEMS_PER_THREAD><<<1, FINALIZE_BLOCK_THREADS>>>(
+            hipLaunchKernelGGL(HIP_KERNEL_NAME(CooFinalizeKernel<FINALIZE_BLOCK_THREADS, FINALIZE_ITEMS_PER_THREAD>), dim3(1), dim3(FINALIZE_BLOCK_THREADS), 0, 0, 
                 d_block_partials,
                 num_partials,
                 d_result);
@@ -870,7 +871,7 @@ void TestDevice(
     }
 
     // Force any kernel stdio to screen
-    CubDebugExit(cudaThreadSynchronize());
+    CubDebugExit(hipDeviceSynchronize());
     fflush(stdout);
 
     // Display timing

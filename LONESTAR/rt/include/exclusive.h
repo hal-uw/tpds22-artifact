@@ -12,18 +12,18 @@
 
 #include "sharedptr.h"
 #include <cassert>
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #ifndef LOADCV
-#define LOADCV(x) cub::ThreadLoad<cub::LOAD_CV>((x))
+#define LOADCV(x) hipcub::ThreadLoad<hipcub::LOAD_CV>((x))
 #endif
 
 #ifndef LOADCG
-#define LOADCG(x) cub::ThreadLoad<cub::LOAD_CG>((x))
+#define LOADCG(x) hipcub::ThreadLoad<hipcub::LOAD_CG>((x))
 #endif
 
 #ifndef STORECG
-#define STORECG(x, y) cub::ThreadStore<cub::STORE_CG>((x), (y))
+#define STORECG(x, y) hipcub::ThreadStore<hipcub::STORE_CG>((x), (y))
 #endif
 
 class ExclusiveLocks {

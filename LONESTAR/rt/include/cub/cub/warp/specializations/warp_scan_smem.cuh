@@ -28,7 +28,7 @@
 
 /**
  * \file
- * cub::WarpScanSmem provides smem-based variants of parallel prefix scan of items partitioned across a CUDA thread warp.
+ * hipcub::WarpScanSmem provides smem-based variants of parallel prefix scan of items partitioned across a CUDA thread warp.
  */
 
 #pragma once
