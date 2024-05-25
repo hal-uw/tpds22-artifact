@@ -1,0 +1,7 @@
+This is the top-level README for the LoneStarGPU benchmarks we ported into our HeteroSync++ framework as part of this work.
+Each of the benchmarks (apps/bfs/, apps/pr, apps/sssp) have application-specific READMEs detailing how to run the applications for the various configurations.
+
+To run all benchmarks, you can use the overall run.sh script -- this script will run BFS, PageRank (PR), and SSSP based on the commands in the application-specific READMEs.
+To run this script, simply type "./run.sh" on the command line.
+This script assumes you have an NVIDIA GPU attached to the system you are running this command on, and it has been tested on Pascal- and Volta-class GPUs, although similar concepts should be possible for other NVIDIA GPUs (e.g., by changing an application's compile.sh script to compile for the appropriate generation of NVIDIA GPU).
+As with the top-level README, this script assumes you have added whatever directory nvcc is in on your system to your PATH in your bashrc/cshrc.
