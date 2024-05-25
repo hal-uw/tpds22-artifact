@@ -25,10 +25,10 @@ include common.mk
 inputs:
 	@echo "Downloading inputs ..."
 	@wget $(INPUT_URL) -O $(INPUT)
-	@wget $(BIP_INPUT_URL) -O $(BIP_INPUT)
+#	@wget $(BIP_INPUT_URL) -O $(BIP_INPUT)
 	@echo "Uncompressing inputs ..."
 	@tar xvf $(INPUT)
-	@tar xvf $(BIP_INPUT)
+#	@tar xvf $(BIP_INPUT)
 	@rm $(INPUT) $(BIP_INPUT)
 	@echo "Inputs available at $(TOPLEVEL)/inputs/"
 
