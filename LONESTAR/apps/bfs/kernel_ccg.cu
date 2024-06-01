@@ -285,6 +285,7 @@ __global__ void bfs_kernel(CSRGraph graph, int LEVEL, bool enable_lb, Worklist2 
 
   bfs_kernel_dev(graph, LEVEL, enable_lb, in_wl, out_wl);
 }
+
 void gg_main_pipe_1(CSRGraph& gg, int& LEVEL, PipeContextT<Worklist2>& pipe, dim3& blocks, dim3& threads)
 {
   while (pipe.in_wl().nitems())
@@ -340,6 +341,7 @@ __global__ void __launch_bounds__(__tb_gg_main_pipe_1_gpu_gb) gg_main_pipe_1_gpu
     *cl_LEVEL = LEVEL;
   }
 }
+
 __global__ void gg_main_pipe_1_gpu(CSRGraph gg, int LEVEL, PipeContextT<Worklist2> pipe, dim3 blocks, dim3 threads, int* cl_LEVEL, bool enable_lb)
 {
   unsigned tid = TID_1D;
@@ -361,6 +363,7 @@ __global__ void gg_main_pipe_1_gpu(CSRGraph gg, int LEVEL, PipeContextT<Worklist
     *cl_LEVEL = LEVEL;
   }
 }
+
 void gg_main_pipe_1_wrapper(CSRGraph& gg, int& LEVEL, PipeContextT<Worklist2>& pipe, dim3& blocks, dim3& threads)
 {
   static GlobalBarrierLifetime gg_main_pipe_1_gpu_gb_barrier;
