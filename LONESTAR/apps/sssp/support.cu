@@ -22,14 +22,13 @@ void process_prog_opt(char c, char *optarg) {
     assert(DELTA > 0);
   }
   if(c == 'l') { 
-	enable_lb = true;
+    enable_lb = true;
   }
   if(c == 's') {
      start_node = atoi(optarg);
      assert(start_node >= 0);
   }
 }
-
 
 void output(CSRGraphTy &g, const char *output_file) {
   FILE *f;
@@ -49,5 +48,4 @@ void output(CSRGraphTy &g, const char *output_file) {
       check_fprintf(f, "%d %d\n", i, g.node_data[i]);
     }
   }
-
 }
