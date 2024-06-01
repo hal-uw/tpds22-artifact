@@ -13,6 +13,7 @@ const char *GGC_OPTIONS = "coop_conv=False $ outline_iterate_gb=True $ backoff_b
 struct ThreadWork t_work;
 extern int DELTA;
 extern int start_node;
+extern int block_factor;
 bool enable_lb = false;
 typedef int edge_data_type;
 typedef int node_data_type;
@@ -484,9 +485,13 @@ void gg_main(CSRGraph& hg, CSRGraph& gg)
 {
   dim3 blocks, threads;
   kernel_sizing(gg, blocks, threads);
-  std::cout << " Enter Block factor" << std::endl;
-  int block_factor;
-  std::cin >> block_factor;
+  // if no user input block factor then request
+  if (block_factor == 0) {
+    std::cout << " Enter Block factor" << std::endl;
+    std::cin >> block_factor;
+    assert(block_factor > 0);
+  }
+  fprintf(stdout, "Using block factor: %d\n", block_factor);
   blocks = ggc_get_nSM()*block_factor;
   t_work.init_thread_work(gg.nnodes);
   static GlobalBarrierLifetime remove_dups_barrier;

@@ -3,13 +3,14 @@
 #include "gg.h"
 #include <cassert>
 
-const char *prog_opts = "ls:d:";
-const char *prog_usage = "[-l] [-d delta] [-s startNode]";
+const char *prog_opts = "ls:d:b:";
+const char *prog_usage = "[-l] [-d delta] [-s startNode] [-b blockFactor]";
 const char *prog_args_usage = "-l: enable thread block load balancer (by default false)";
 
 int DELTA = 10000;
 extern const int INF;
 int start_node = 0;
+int block_factor = 0;
 extern bool enable_lb;
 
 int process_prog_arg(int argc, char *argv[], int arg_start) {
@@ -27,6 +28,9 @@ void process_prog_opt(char c, char *optarg) {
   if(c == 's') {
      start_node = atoi(optarg);
      assert(start_node >= 0);
+  }
+  if (c == 'b') {
+    block_factor = atoi(optarg);
   }
 }
 

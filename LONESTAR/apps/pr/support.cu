@@ -13,13 +13,14 @@ struct pr_value {
 };
 
 /* TODO: accept ALPHA and EPSILON */
-const char *prog_opts = "nt:x:";
-const char *prog_usage = "[-n] [-t top_ranks] [-x max_iterations]";
+const char *prog_opts = "nt:x:b:";
+const char *prog_usage = "[-n] [-t top_ranks] [-x max_iterations] [-b blockFactor]";
 const char *prog_args_usage = "";
 
 extern float *P_CURR, *P_NEXT;
 extern const float ALPHA, EPSILON;
 extern int MAX_ITERATIONS;
+int block_factor = 0;
 
 int NO_PRINT_PAGERANK = 0;
 int PRINT_TOP = 0;
@@ -30,8 +31,9 @@ int process_prog_arg(int argc, char *argv[], int arg_start) {
 }
 
 void process_prog_opt(char c, char *optarg) {
-  if(c == 'n')
+  if(c == 'n') {
     NO_PRINT_PAGERANK = 1;
+  }
 
   if(c == 't') {
     PRINT_TOP = atoi(optarg);    
@@ -39,6 +41,10 @@ void process_prog_opt(char c, char *optarg) {
 
   if(c == 'x') {
     MAX_ITERATIONS = atoi(optarg);
+  }
+
+  if (c == 'b') {
+    block_factor = atoi(optarg);
   }
 }
 

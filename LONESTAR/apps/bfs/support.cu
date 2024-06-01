@@ -2,12 +2,13 @@
 
 #include "gg.h"
 
-const char *prog_opts = "ls:";
-const char *prog_usage = "[-l] [-s startNode]";
+const char *prog_opts = "ls:b:";
+const char *prog_usage = "[-l] [-s startNode] [-b blockFactor]";
 const char *prog_args_usage = "-l: enable thread block load balancer (by default false)";
 
 extern const int INF;
 int start_node = 0;
+int block_factor = 0;
 extern bool enable_lb;
 
 int process_prog_arg(int argc, char *argv[], int arg_start) {
@@ -15,12 +16,15 @@ int process_prog_arg(int argc, char *argv[], int arg_start) {
 }
 
 void process_prog_opt(char c, char *optarg) {
-   if(c == 's') {
+   if (c == 's') {
      start_node = atoi(optarg);
      assert(start_node >= 0);
    }
-   if(c == 'l') {
-	   enable_lb = true;
+   if (c == 'l') {
+     enable_lb = true;
+   }
+   if (c == 'b') {
+     block_factor = atoi(optarg);
    }
 }
 

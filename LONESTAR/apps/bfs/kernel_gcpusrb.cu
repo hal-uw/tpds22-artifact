@@ -291,6 +291,7 @@ void kernel_sizing(CSRGraph &, dim3 &, dim3 &);
 const char *GGC_OPTIONS = "coop_conv=False $ outline_iterate_gb=True $ backoff_blocking_factor=4 $ parcomb=True $ np_schedulers=set(['fg', 'tb', 'wp']) $ cc_disable=set([]) $ tb_lb=True $ hacks=set([]) $ np_factor=8 $ instrument=set([]) $ unroll=[] $ read_props=None $ outline_iterate=True $ ignore_nested_errors=False $ np=True $ write_props=None $ quiet_cgen=True $ retry_backoff=True $ cuda.graph_type=basic $ cuda.use_worklist_slots=True $ cuda.worklist_type=basic";
 struct ThreadWork t_work;
 extern int start_node;
+extern int block_factor;
 bool enable_lb = false;
 typedef int edge_data_type;
 typedef int node_data_type;
@@ -715,9 +716,13 @@ void gg_main(CSRGraph& hg, CSRGraph& gg)
 {
   dim3 blocks, threads;
   kernel_sizing(gg, blocks, threads);
-  std::cout << " Enter Block factor" << std::endl;
-  int block_factor;
-  std::cin >> block_factor;
+  // if no user input block factor then request
+  if (block_factor == 0) {
+    std::cout << " Enter Block factor" << std::endl;
+    std::cin >> block_factor;
+    assert(block_factor > 0);
+  }
+  fprintf(stdout, "Using block factor: %d\n", block_factor);
   blocks = ggc_get_nSM()*block_factor;
   t_work.init_thread_work(gg.nnodes);
   PipeContextT<Worklist2> wl;

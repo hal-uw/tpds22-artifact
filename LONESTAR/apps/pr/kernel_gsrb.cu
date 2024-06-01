@@ -291,6 +291,7 @@ float* P_NEXT ;
 extern const float ALPHA = 0.85;
 extern const float EPSILON = 0.000001;
 extern int MAX_ITERATIONS ;
+extern int block_factor;
 static const int __tb_gg_main_pipe_1_gpu_gb = 32;
 static const int __tb_one = 1;
 static const int __tb_pagerank_main = TB_SIZE;
@@ -684,9 +685,13 @@ void gg_main(CSRGraph& hg, CSRGraph& gg)
 {
   dim3 blocks, threads;
   kernel_sizing(gg, blocks, threads);
-  std::cout << " Enter Block factor" << std::endl;
-  int block_factor;
-  std::cin >> block_factor;
+  // if no user input block factor then request
+  if (block_factor == 0) {
+    std::cout << " Enter Block factor" << std::endl;
+    std::cin >> block_factor;
+    assert(block_factor > 0);
+  }
+  fprintf(stdout, "Using block factor: %d\n", block_factor);
   blocks = ggc_get_nSM()*block_factor;
   t_work.init_thread_work(gg.nnodes);
   static GlobalBarrierLifetime remove_dups_barrier;
